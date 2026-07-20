@@ -138,22 +138,11 @@
     return null;
   }
 
-  // Intentionally mirrors the current behavior so shared refactoring can land
-  // before the date-matching bug fix.
   function matchFestivalDate(text, cfg) {
-    const n = norm(text);
-    if (!n) return null;
-    for (const d of cfg.FESTIVAL_DAYS) {
-      const dayNum = d.iso.slice(-2).replace(/^0/, '');
-      const tokenRe = new RegExp('(^|[^0-9])' + dayNum + '([^0-9]|$)');
-      if (tokenRe.test(n)) return d.iso;
-    }
-    const t = Date.parse(text);
-    if (!isNaN(t)) {
-      const iso = new Date(t).toISOString().slice(0, 10);
-      if (cfg.FESTIVAL_DAYS.some((d) => d.iso === iso)) return iso;
-    }
-    return null;
+    const parsed = parseAnyDate(text, cfg);
+    if (!parsed) return null;
+    const bounds = festivalBounds(cfg);
+    return parsed.iso >= bounds.first && parsed.iso <= bounds.last ? parsed.iso : null;
   }
 
   function buildSchedule(row, hdrs, cfg, validation) {

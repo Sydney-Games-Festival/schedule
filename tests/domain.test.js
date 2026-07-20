@@ -81,6 +81,32 @@ test('buildEvent falls back to tentative planning-grid entries when no specific 
   assert.deepEqual([...Domain.bucketsForDay(ev, '2026-10-16')], ['AM']);
 });
 
+test('matchFestivalDate only returns dates that actually parse inside the festival window', () => {
+  assert.equal(Domain.matchFestivalDate('Mon, Oct 13', CFG), '2026-10-13');
+  assert.equal(Domain.matchFestivalDate('13/10', CFG), '2026-10-13');
+  assert.equal(Domain.matchFestivalDate('14 Nov 2026', CFG), null);
+  assert.equal(Domain.matchFestivalDate('18/11/2026', CFG), null);
+  assert.equal(Domain.matchFestivalDate('12 Sep', CFG), null);
+});
+
+test('out-of-window specific dates stay in before/after regions instead of becoming festival days', () => {
+  const afterEvent = buildEvent({
+    Organisation: 'Serious Play Lab',
+    'Stage of Planning': 'Ideation',
+    'What is the specific date being planned?': 'Possibly Sun Oct 25, morning',
+  });
+  const beforeEvent = buildEvent({
+    Organisation: 'Sydney Tabletop Guild',
+    'Stage of Planning': 'Announced / Live',
+    'What is the specific date being planned?': 'Fri, Oct 9',
+  });
+
+  assert.equal(afterEvent.region, 'after');
+  assert.deepEqual(afterEvent.dayIsos, []);
+  assert.equal(beforeEvent.region, 'before');
+  assert.deepEqual(beforeEvent.dayIsos, []);
+});
+
 test('shared presentation helpers return consistent labels', () => {
   const ev = buildEvent({
     Organisation: 'Indie Launch Pad',
