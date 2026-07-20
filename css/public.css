@@ -108,6 +108,10 @@ body::before {
   box-shadow: 0 6px 18px rgba(0,0,0,.18); }
 .brand-badge .dot { color: var(--orange); }
 
+/* Mobile day picker — hidden on desktop/tablet, shown in place of the rail
+   below the phone breakpoint (see the 600px query). */
+.mobile-day-picker { display: none; }
+
 @media (max-width: 820px) {
   .layout { grid-template-columns: 1fr; padding: 20px 16px 90px; }
   .rail { position: static; flex-direction: row; overflow-x: auto; gap: 16px; padding-bottom: 8px; }
@@ -115,4 +119,18 @@ body::before {
   .rail-item .sub { display: inline; margin: 0 0 0 6px; }
   .pcard-body { grid-template-columns: 1fr; }
   .pcard-img { max-width: 100%; }
+}
+
+/* Phone-sized viewports: swap the horizontal-scroll rail for a single dropdown. */
+@media (max-width: 600px) {
+  .rail { display: none; }
+  .mobile-day-picker { display: block; margin-bottom: 16px; }
+  .mobile-day-picker select {
+    width: 100%; font-family: var(--font-display); font-weight: 600; font-size: 18px;
+    color: var(--orange-deep); background-color: var(--card); border: 2px solid var(--orange-soft);
+    border-radius: 14px; padding: 12px 40px 12px 16px; appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><path fill='%23e0742a' d='M5 7l5 6 5-6z'/></svg>");
+    background-repeat: no-repeat; background-position: right 14px center; background-size: 16px;
+  }
+  .mobile-day-picker select:focus { outline: 2px solid var(--orange); outline-offset: 2px; }
 }

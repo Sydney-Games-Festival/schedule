@@ -84,6 +84,12 @@
       `<button class="rail-item ${s.key === state.selected ? 'active' : ''}" data-scope="${esc(s.key)}">
         <span class="lbl">${esc(s.short)}</span><span class="sub">${esc(s.sub)}</span></button>`).join('');
   }
+  // Mobile-only day switcher (a native <select> replaces the horizontal-scroll
+  // rail below the tablet breakpoint — see .mobile-day-picker in public.css).
+  function mobileOptionsHtml() {
+    return state.scopes.map((s) =>
+      `<option value="${esc(s.key)}" ${s.key === state.selected ? 'selected' : ''}>${esc(s.short)} — ${esc(s.sub)}</option>`).join('');
+  }
 
   function footCell(ico, text) {
     return `<div class="cell"><span class="ico">${ico}</span>${esc(text || PLACEHOLDER)}</div>`;
@@ -125,6 +131,7 @@
     const loading = $('#loading'); if (loading) loading.hidden = true;
     $('.day-header').hidden = false;
     $('#rail').innerHTML = railHtml();
+    $('#mobileDaySelect').innerHTML = mobileOptionsHtml();
     const evs = eventsForScope(state.selected).slice()
       .sort((a, b) => (a.startMin ?? 1e9) - (b.startMin ?? 1e9));
     const scope = state.scopes.find((s) => s.key === state.selected);
@@ -168,6 +175,11 @@
     const t = e.target.closest('[data-scope]');
     if (!t) return;
     state.selected = t.dataset.scope;
+    render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  $('#mobileDaySelect').addEventListener('change', (e) => {
+    state.selected = e.target.value;
     render();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
