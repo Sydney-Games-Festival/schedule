@@ -8,6 +8,7 @@
   const CFG = window.SGF_CONFIG;
   const Domain = window.SGF_DOMAIN;
   const Links = window.SGF_LINKS;
+  const Validation = window.SGF_VALIDATION;
   // Resolve site-relative paths (e.g. SAMPLE_CSV_URL) against the actual
   // location of THIS script, not the page — pages at different depths
   // (root vs private/) load data.js via different relative paths, but the
@@ -39,7 +40,7 @@
       const fields = (res.meta && res.meta.fields) || [];
       const hdrs = Domain.headerIndex(fields);
       const events = (res.data || [])
-        .map((r) => Domain.buildEvent(r, hdrs, CFG, { links: Links }))
+        .map((r) => Domain.buildEvent(r, hdrs, CFG, { links: Links, validation: Validation }))
         // drop fully-empty rows
         .filter((e) => e.title !== 'Untitled event' || e.description || e.statusRaw);
       return { events, fields };

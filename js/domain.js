@@ -156,11 +156,14 @@
     return null;
   }
 
-  function buildSchedule(row, hdrs, cfg) {
-    const specific = pick(row, hdrs, 'specific date');
-    const startTime = pick(row, hdrs, 'start time');
-    const endTime = pick(row, hdrs, 'end time');
-    const otherDate = pick(row, hdrs, 'still planning', 'other');
+  function buildSchedule(row, hdrs, cfg, validation) {
+    const cleanText = validation && typeof validation.cleanText === 'function'
+      ? validation.cleanText
+      : function (value) { return String(value == null ? '' : value).trim(); };
+    const specific = cleanText(pick(row, hdrs, 'specific date'));
+    const startTime = cleanText(pick(row, hdrs, 'start time'));
+    const endTime = cleanText(pick(row, hdrs, 'end time'));
+    const otherDate = cleanText(pick(row, hdrs, 'still planning', 'other'));
     const base = {
       entries: [],
       specificRaw: specific,
@@ -178,7 +181,7 @@
 
     for (const d of cfg.FESTIVAL_DAYS) {
       const dayNum = d.iso.slice(-2).replace(/^0/, '');
-      const val = pick(row, hdrs, 'still planning', 'oct ' + dayNum);
+      const val = cleanText(pick(row, hdrs, 'still planning', 'oct ' + dayNum));
       if (val) base.entries.push({ iso: d.iso, tentative: true, slot: val, startTime, endTime });
     }
     if (base.entries.length) return base;
@@ -204,16 +207,31 @@
 
   function buildEvent(row, hdrs, cfg, options) {
     const links = options && options.links;
-    const cleanUrl = links && typeof links.cleanUrl === 'function'
-      ? links.cleanUrl
-      : function (url) { return String(url || '').trim(); };
-    const organisation = pick(row, hdrs, 'organisation');
-    const eventName = pick(row, hdrs, 'event name');
-    const sched = buildSchedule(row, hdrs, cfg);
-    const publishedRaw = pick(row, hdrs, 'published');
-    const startTime = pick(row, hdrs, 'start time');
-    const endTime = pick(row, hdrs, 'end time');
-    const duration = pick(row, hdrs, 'how long', 'duration') || pick(row, hdrs, 'duration');
+    const validation = options && options.validation;
+    const cleanText = validation && typeof validation.cleanText === 'function'
+      ? validation.cleanText
+      : function (value) { return String(value == null ? '' : value).trim(); };
+    const cleanList = validation && typeof validation.cleanList === 'function'
+      ? validation.cleanList
+      : splitList;
+    const cleanLocation = validation && typeof validation.cleanLocation === 'function'
+      ? validation.cleanLocation
+      : cleanText;
+    const cleanPublished = validation && typeof validation.cleanPublished === 'function'
+      ? function (value) { return validation.cleanPublished(value, norm); }
+      : function (value) { return /^y/.test(norm(value)); };
+    const cleanUrl = validation && typeof validation.cleanUrlText === 'function'
+      ? validation.cleanUrlText
+      : links && typeof links.cleanUrl === 'function'
+        ? links.cleanUrl
+        : function (url) { return String(url || '').trim(); };
+    const organisation = cleanText(pick(row, hdrs, 'organisation'));
+    const eventName = cleanText(pick(row, hdrs, 'event name'));
+    const sched = buildSchedule(row, hdrs, cfg, validation);
+    const publishedRaw = cleanText(pick(row, hdrs, 'published'));
+    const startTime = cleanText(pick(row, hdrs, 'start time'));
+    const endTime = cleanText(pick(row, hdrs, 'end time'));
+    const duration = cleanText(pick(row, hdrs, 'how long', 'duration') || pick(row, hdrs, 'duration'));
     const startMin = parseTimeToMin(startTime);
     let endMin = parseTimeToMin(endTime);
 
@@ -227,36 +245,36 @@
       title: eventName || organisation || 'Untitled event',
       hasRealName: !!eventName,
       organisation,
-      organiser: pick(row, hdrs, 'name'),
-      role: pick(row, hdrs, 'role'),
+      organiser: cleanText(pick(row, hdrs, 'name')),
+      role: cleanText(pick(row, hdrs, 'role')),
       orgUrl: cleanUrl(pick(row, hdrs, 'organisation url')),
-      reach: pick(row, hdrs, 'reaches'),
-      coOrganisers: pick(row, hdrs, 'who else'),
+      reach: cleanText(pick(row, hdrs, 'reaches')),
+      coOrganisers: cleanText(pick(row, hdrs, 'who else')),
 
       status: statusInfo(pick(row, hdrs, 'stage of planning'), cfg),
       statusRaw: pick(row, hdrs, 'stage of planning'),
-      published: /^y/.test(norm(publishedRaw)),
+      published: cleanPublished(publishedRaw),
       publishedRaw,
 
-      email: pick(row, hdrs, 'email'),
-      mobile: pick(row, hdrs, 'mobile'),
-      discord: pick(row, hdrs, 'discord'),
-      altContact: pick(row, hdrs, 'alternate contact'),
+      email: cleanText(pick(row, hdrs, 'email')),
+      mobile: cleanText(pick(row, hdrs, 'mobile')),
+      discord: cleanText(pick(row, hdrs, 'discord')),
+      altContact: cleanText(pick(row, hdrs, 'alternate contact')),
 
-      description: pick(row, hdrs, 'tell us about'),
-      blurb: pick(row, hdrs, 'marketing blurb'),
-      gameTypes: splitList(pick(row, hdrs, 'type of games')),
-      audiences: splitList(pick(row, hdrs, 'type of audience')),
+      description: cleanText(pick(row, hdrs, 'tell us about')),
+      blurb: cleanText(pick(row, hdrs, 'marketing blurb')),
+      gameTypes: cleanList(pick(row, hdrs, 'type of games')),
+      audiences: cleanList(pick(row, hdrs, 'type of audience')),
 
       duration,
-      location: pick(row, hdrs, 'where do you plan'),
+      location: cleanLocation(pick(row, hdrs, 'where do you plan')),
       venueLatLng: parseLatLng(pick(row, hdrs, 'venue', 'lat')),
-      attendance: pick(row, hdrs, 'estimated attendance'),
-      capacity: pick(row, hdrs, 'max capacity'),
+      attendance: cleanText(pick(row, hdrs, 'estimated attendance')),
+      capacity: cleanText(pick(row, hdrs, 'max capacity')),
       ticketUrl: cleanUrl(pick(row, hdrs, 'what url should we direct')),
       thumbnail: cleanUrl(pick(row, hdrs, 'url to thumbnail')),
 
-      timestamp: pick(row, hdrs, 'timestamp'),
+      timestamp: cleanText(pick(row, hdrs, 'timestamp')),
       startTime,
       endTime,
       startMin,

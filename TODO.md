@@ -4,7 +4,7 @@
 
 - [x] Extract shared domain helpers out of page controllers into reusable modules for scheduling, filters, and links.
 - [x] Add lightweight automated tests for parsing, scheduling, visibility, and shared domain rules.
-- [ ] Add a shared validation/sanitization boundary for sheet-driven event data.
+- [x] Add a shared validation/sanitization boundary for sheet-driven event data.
 
 ## Bug Fixes
 

@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const Domain = require('../js/domain.js');
 const Filters = require('../js/filters.js');
 const Links = require('../js/links.js');
+const Validation = require('../js/validation.js');
 
 const CFG = {
   FESTIVAL_DAYS: [
@@ -27,12 +28,12 @@ const dayByIso = Object.fromEntries(CFG.FESTIVAL_DAYS.map((d) => [d.iso, d]));
 
 function buildEvent(row) {
   const hdrs = Domain.headerIndex(Object.keys(row));
-  return Domain.buildEvent(row, hdrs, CFG, { links: Links });
+  return Domain.buildEvent(row, hdrs, CFG, { links: Links, validation: Validation });
 }
 
 test('buildEvent normalizes confirmed events from sheet-like rows', () => {
   const ev = buildEvent({
-    Organisation: 'Meeple Mates Sydney',
+    Organisation: '  Meeple   Mates Sydney  ',
     'Event Name': 'Open Table',
     'Stage of Planning': 'Announced / Live (tickets ready)',
     Published: 'Y',
@@ -46,6 +47,7 @@ test('buildEvent normalizes confirmed events from sheet-like rows', () => {
     'URL to Thumbnail': ' https://example.com/thumb.jpg ',
   });
 
+  assert.equal(ev.organisation, 'Meeple Mates Sydney');
   assert.equal(ev.title, 'Open Table');
   assert.equal(ev.status.key, 'live');
   assert.equal(ev.published, true);
@@ -54,6 +56,13 @@ test('buildEvent normalizes confirmed events from sheet-like rows', () => {
   assert.equal(ev.endMin, 1080);
   assert.equal(ev.ticketUrl, 'https://example.com/tickets');
   assert.equal(ev.thumbnail, 'https://example.com/thumb.jpg');
+});
+
+test('shared validation helpers centralize cleanup for text, lists, and published flags', () => {
+  assert.equal(Validation.cleanText('  Sydney   Town Hall \n'), 'Sydney Town Hall');
+  assert.deepEqual(Validation.cleanList(' Board Games,  Card Games / TCGs , '), ['Board Games', 'Card Games / TCGs']);
+  assert.equal(Validation.cleanPublished(' Y ', Domain.norm), true);
+  assert.equal(Validation.cleanPublished('n', Domain.norm), false);
 });
 
 test('buildEvent falls back to tentative planning-grid entries when no specific date exists', () => {
