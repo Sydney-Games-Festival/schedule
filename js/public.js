@@ -68,13 +68,27 @@
   }
 
   // Coarse 3-way grouping for the audience filter chips (distinct from the
-  // finer-grained badge above): Players / Makers / Learners.
+  // finer-grained badge above): Players / Makers / Learners. Matches each
+  // audience value exactly (not a loose substring search) — "Other Industry
+  // Players" is a makers/industry category, not a player one, but a naive
+  // `.includes('player')` check would wrongly catch it too; and "General
+  // Public" is deliberately left unbucketed since it isn't specifically any
+  // of the three.
+  const AUDIENCE_BUCKET_MAP = {
+    'beginner players': 'players',
+    'experienced players': 'players',
+    'beginner makers': 'makers',
+    'experienced makers': 'makers',
+    'other industry players': 'makers',
+    students: 'learners',
+    academics: 'learners',
+  };
   function audienceBuckets(ev) {
-    const a = ev.audiences.join(' ').toLowerCase();
     const buckets = new Set();
-    if (a.includes('player') || a.includes('general public')) buckets.add('players');
-    if (a.includes('maker') || a.includes('industry')) buckets.add('makers');
-    if (a.includes('student') || a.includes('academic')) buckets.add('learners');
+    ev.audiences.forEach((raw) => {
+      const bucket = AUDIENCE_BUCKET_MAP[raw.toLowerCase().trim()];
+      if (bucket) buckets.add(bucket);
+    });
     return buckets;
   }
   function passesAudienceFilter(ev) {
