@@ -15,12 +15,14 @@ const CFG = {
   ],
 };
 
-test('buildSummary counts rows across festival days, other, and unique totals', () => {
+test('buildSummary counts rows across festival days, before/after/TBD buckets, and unique totals', () => {
   const columns = AdminStats.defaultColumns(CFG);
   const events = [
     { status: { key: 'live' }, gameTypes: ['Board Games'], dayIsos: ['2026-10-12'], published: true },
     { status: { key: 'live' }, gameTypes: ['Board Games', 'Tabletop RPGs'], dayIsos: ['2026-10-12', '2026-10-13'], published: false },
-    { status: { key: 'early' }, gameTypes: ['Tabletop RPGs'], dayIsos: [], published: false },
+    { status: { key: 'early' }, gameTypes: ['Tabletop RPGs'], dayIsos: [], region: AdminStats.OTHER_KEY, published: false },
+    { status: { key: 'early' }, gameTypes: ['Tabletop RPGs'], dayIsos: [], region: AdminStats.BEFORE_KEY, published: false },
+    { status: { key: 'live' }, gameTypes: ['Board Games'], dayIsos: [], region: AdminStats.AFTER_KEY, published: true },
   ];
   const rows = [
     { key: 'live', label: 'Live', match: (ev) => ev.status.key === 'live' },
@@ -33,11 +35,30 @@ test('buildSummary counts rows across festival days, other, and unique totals', 
 
   assert.equal(live.counts['2026-10-12'], 2);
   assert.equal(live.counts['2026-10-13'], 1);
-  assert.equal(live.total, 2);
+  assert.equal(live.counts[AdminStats.AFTER_KEY], 1);
+  assert.equal(live.total, 3);
+  assert.equal(early.counts[AdminStats.BEFORE_KEY], 1);
   assert.equal(early.counts[AdminStats.OTHER_KEY], 1);
-  assert.equal(early.total, 1);
+  assert.equal(early.total, 2);
   assert.equal(summary.totals.counts['2026-10-12'], 2);
   assert.equal(summary.totals.counts['2026-10-13'], 1);
+  assert.equal(summary.totals.counts[AdminStats.BEFORE_KEY], 1);
+  assert.equal(summary.totals.counts[AdminStats.AFTER_KEY], 1);
   assert.equal(summary.totals.counts[AdminStats.OTHER_KEY], 1);
-  assert.equal(summary.totals.total, 3);
+  assert.equal(summary.totals.total, 5);
+});
+
+test('eventDayBuckets keeps before/after regions separate from TBD events', () => {
+  assert.deepEqual(
+    AdminStats.eventDayBuckets({ dayIsos: [], region: AdminStats.BEFORE_KEY }),
+    [AdminStats.BEFORE_KEY]
+  );
+  assert.deepEqual(
+    AdminStats.eventDayBuckets({ dayIsos: [], region: AdminStats.AFTER_KEY }),
+    [AdminStats.AFTER_KEY]
+  );
+  assert.deepEqual(
+    AdminStats.eventDayBuckets({ dayIsos: [], region: AdminStats.OTHER_KEY }),
+    [AdminStats.OTHER_KEY]
+  );
 });

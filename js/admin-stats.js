@@ -3,15 +3,23 @@
   if (typeof module === 'object' && module.exports) module.exports = api;
   root.SGF_ADMIN_STATS = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  const BEFORE_KEY = 'before';
+  const AFTER_KEY = 'after';
   const OTHER_KEY = 'other';
 
   function defaultColumns(cfg) {
     return cfg.FESTIVAL_DAYS.map((d) => ({ key: d.iso, label: d.short }))
-      .concat({ key: OTHER_KEY, label: 'Other' });
+      .concat(
+        { key: BEFORE_KEY, label: 'Before' },
+        { key: AFTER_KEY, label: 'After' },
+        { key: OTHER_KEY, label: 'TBD' }
+      );
   }
 
   function eventDayBuckets(ev) {
-    return ev.dayIsos.length ? ev.dayIsos : [OTHER_KEY];
+    if (ev.dayIsos.length) return ev.dayIsos;
+    if (ev.region === BEFORE_KEY || ev.region === AFTER_KEY || ev.region === OTHER_KEY) return [ev.region];
+    return [OTHER_KEY];
   }
 
   function emptyCounts(columns) {
@@ -49,6 +57,8 @@
   }
 
   return {
+    AFTER_KEY,
+    BEFORE_KEY,
     OTHER_KEY,
     buildSummary,
     defaultColumns,

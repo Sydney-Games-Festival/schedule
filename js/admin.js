@@ -251,7 +251,10 @@
     });
     const published = list.filter((ev) => ev.published).length;
     const timed = list.filter((ev) => Domain.hasTimedSchedule(ev)).length;
-    const otherBucket = list.filter((ev) => !ev.dayIsos.length).length;
+    const beforeBucket = list.filter((ev) => ev.region === AdminStats.BEFORE_KEY).length;
+    const afterBucket = list.filter((ev) => ev.region === AdminStats.AFTER_KEY).length;
+    const outsideFestivalBucket = beforeBucket + afterBucket;
+    const unscheduledBucket = list.filter((ev) => !ev.dayIsos.length && (!ev.region || ev.region === AdminStats.OTHER_KEY)).length;
     const publishedShare = list.length ? Math.round((published / list.length) * 100) : 0;
     const timedPending = Math.max(list.length - timed, 0);
     $('#statsView').innerHTML = `
@@ -259,7 +262,8 @@
         ${statsKpiHtml('Filtered events', list.length, 'Current result set across all active filters.', 'primary')}
         ${statsKpiHtml('Published', published, `${publishedShare}% marked for the public schedule.`, 'success')}
         ${statsKpiHtml('Timed', timed, timedPending ? `${timedPending} still tentative or untimed.` : 'All filtered events have confirmed times.', 'info')}
-        ${statsKpiHtml('Other / no day', otherBucket, 'Outside festival days or still date TBD.', 'muted')}
+        ${statsKpiHtml('Outside festival days', outsideFestivalBucket, `${beforeBucket} before / ${afterBucket} after the core week.`, 'muted')}
+        ${statsKpiHtml('TBD / unscheduled', unscheduledBucket, 'No confirmed festival-day date yet.', 'muted')}
       </div>
       ${statsTableHtml('Stage', 'Counts by current filtered event set.', stageSummary)}
       ${statsTableHtml('Game type', 'Events can appear in more than one game-type row.', typeSummary)}

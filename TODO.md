@@ -28,5 +28,5 @@
 - [x] Add a simple admin stats view with stage/type totals across festival days and overall total.
 - [x] Improve the admin stats view styling so key summaries stand out and tables are easier to scan.
 - [x] Refine the admin stats styling with corrected table alignment, clearer striping, and stronger KPI emphasis.
-- [ ] Split admin stats tentative/unscheduled events from events scheduled outside the festival-day window.
+- [x] Split admin stats tentative/unscheduled events from events scheduled outside the festival-day window.
 - [ ] Add Screen (Digital) and Tabletop (Non-Digital) rollups to the admin game-type stats while keeping the detailed breakdown.
