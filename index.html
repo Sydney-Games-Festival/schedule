@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sydney Games Festival — Schedule</title>
+  <meta name="description" content="What's on at the Sydney Games Festival, 12–18 October 2026." />
+  <link rel="icon" href="images/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/base.css?v=1" />
+  <link rel="stylesheet" href="css/public.css?v=1" />
+</head>
+<body>
+  <div class="layout">
+    <nav id="rail" class="rail" aria-label="Festival days"></nav>
+    <main id="main">
+      <div id="loading" class="loading-public">Loading the festival schedule…</div>
+      <header class="day-header" hidden>
+        <h1 id="dayTitle"></h1>
+        <div id="timeRange" class="time-range"></div>
+      </header>
+      <div id="cards" class="cards"></div>
+    </main>
+  </div>
+
+  <div class="brand-badge"><span class="dot">◆</span> Sydney Games Festival</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="js/config.js?v=1"></script>
+  <script src="js/data.js?v=1"></script>
+  <script src="js/public.js?v=1"></script>
+</body>
+</html>

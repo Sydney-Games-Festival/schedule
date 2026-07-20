@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" role="img" aria-label="Sydney Games Festival event">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fbe3cf"/>
+      <stop offset="1" stop-color="#f7d0e4"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="400" fill="url(#g)"/>
+  <g fill="none" stroke="#f5852b" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" opacity="0.85">
+    <rect x="205" y="150" width="190" height="110" rx="55"/>
+    <line x1="250" y1="190" x2="250" y2="220"/>
+    <line x1="235" y1="205" x2="265" y2="205"/>
+    <circle cx="345" cy="196" r="7" fill="#f5852b" stroke="none"/>
+    <circle cx="365" cy="216" r="7" fill="#f5852b" stroke="none"/>
+  </g>
+  <text x="300" y="315" text-anchor="middle" font-family="Fredoka, Arial, sans-serif" font-size="26" font-weight="600" fill="#e0742a" opacity="0.9">SGF 2026</text>
+</svg>

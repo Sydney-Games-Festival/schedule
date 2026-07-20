@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>SGF Schedule — Admin</title>
+  <link rel="icon" href="images/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Special+Gothic+Expanded+One&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/base.css?v=1" />
+  <link rel="stylesheet" href="css/admin.css?v=1" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <h1 class="head">SGF Schedule</h1>
+      <small>Admin · Oct 12–18, 2026</small>
+    </div>
+    <span id="sourcePill" class="source-pill sample">…</span>
+    <div class="spacer"></div>
+    <div class="tools">
+      <button id="viewSchedule" class="chip-btn active">Schedule</button>
+      <button id="viewDay" class="chip-btn">Day</button>
+      <button id="viewList" class="chip-btn">List</button>
+      <button id="refreshBtn" class="chip-btn" title="Reload data">↻ Refresh</button>
+      <a class="chip-btn" href="map.html">Map</a>
+      <button id="themeBtn" class="chip-btn" title="Toggle theme">◐ Theme</button>
+    </div>
+  </header>
+
+  <nav id="dayStrip" class="day-strip" aria-label="Festival day"></nav>
+
+  <section class="filters" aria-label="Filters">
+    <div class="field">
+      <label for="search">Search</label>
+      <input id="search" type="search" placeholder="Title, organiser, blurb…" />
+    </div>
+    <div class="field">
+      <label>Status</label>
+      <div id="statusToggles" class="status-toggles"></div>
+    </div>
+    <div class="field">
+      <label for="audienceSel">Audience</label>
+      <select id="audienceSel"><option value="">All audiences</option></select>
+    </div>
+    <div class="field">
+      <label for="gameSel">Game type</label>
+      <select id="gameSel"><option value="">All game types</option></select>
+    </div>
+    <div class="field">
+      <label for="daySel">Day</label>
+      <select id="daySel"><option value="">All days</option></select>
+    </div>
+    <div class="field">
+      <label for="pubSel">Published</label>
+      <select id="pubSel">
+        <option value="">Any</option>
+        <option value="y">Published (Y)</option>
+        <option value="n">Not published</option>
+      </select>
+    </div>
+    <div class="spacer"></div>
+    <div class="result-count" id="resultCount"></div>
+  </section>
+
+  <main>
+    <div id="loading" class="loading">Loading events…</div>
+    <div id="scheduleView" class="schedule-view" hidden></div>
+    <div id="dayView" class="cal-view" hidden></div>
+    <div id="listWrap" class="table-wrap" hidden>
+      <table class="list">
+        <thead><tr>
+          <th data-sort="status">Status</th>
+          <th data-sort="pub">Pub</th>
+          <th data-sort="title">Event</th>
+          <th data-sort="organiser">Organiser</th>
+          <th data-sort="day">Day(s)</th>
+          <th data-sort="time">Time</th>
+          <th data-sort="audience">Audience</th>
+          <th data-sort="games">Games</th>
+          <th data-sort="location">Location</th>
+        </tr></thead>
+        <tbody id="listBody"></tbody>
+      </table>
+    </div>
+    <div id="emptyState" class="empty-state" hidden>No events match these filters.</div>
+  </main>
+
+  <div id="backdrop" class="drawer-backdrop"></div>
+  <aside id="drawer" class="drawer" aria-hidden="true"></aside>
+
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="js/config.js?v=1"></script>
+  <script src="js/data.js?v=1"></script>
+  <script src="js/admin.js?v=1"></script>
+</body>
+</html>
