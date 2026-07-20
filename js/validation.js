@@ -7,6 +7,18 @@
     return String(value == null ? '' : value).replace(/\s+/g, ' ').trim();
   }
 
+  // Like cleanText, but keeps line breaks — for long-text fields (description,
+  // marketing blurb) that render in white-space: pre-wrap containers, where
+  // collapsing newlines would flatten paragraphs into one block.
+  function cleanMultiline(value) {
+    return String(value == null ? '' : value)
+      .replace(/\r\n?/g, '\n')          // normalise CRLF / CR to LF
+      .replace(/[^\S\n]+/g, ' ')        // collapse runs of spaces/tabs, keep newlines
+      .replace(/[ \t]*\n[ \t]*/g, '\n') // trim horizontal space around each break
+      .replace(/\n{3,}/g, '\n\n')       // cap blank-line runs at one
+      .trim();
+  }
+
   function cleanList(value) {
     const text = cleanText(value);
     if (!text) return [];
@@ -46,6 +58,7 @@
   return {
     cleanList,
     cleanLocation,
+    cleanMultiline,
     cleanPublished,
     cleanText,
     cleanUrlText,

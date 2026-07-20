@@ -69,6 +69,26 @@ test('shared validation helpers centralize cleanup for text, lists, and publishe
   assert.equal(Links.hasUrl('data:text/html,hi'), false);
 });
 
+test('cleanMultiline keeps paragraph breaks while tidying horizontal whitespace', () => {
+  assert.equal(
+    Validation.cleanMultiline('First   paragraph.  \n\n  Second    line.'),
+    'First paragraph.\n\nSecond line.'
+  );
+  assert.equal(Validation.cleanMultiline('A\n\n\n\nB'), 'A\n\nB');
+  assert.equal(Validation.cleanMultiline('  single   line  '), 'single line');
+});
+
+test('buildEvent preserves line breaks in description and blurb', () => {
+  const ev = buildEvent({
+    Organisation: 'Multi Line Co',
+    'Stage of Planning': 'Announced / Live',
+    'Tell us about your event': 'Line one.\n\nLine two.',
+    'Marketing Blurb (30 words)': 'Hook line.\nSecond line.',
+  });
+  assert.equal(ev.description, 'Line one.\n\nLine two.');
+  assert.equal(ev.blurb, 'Hook line.\nSecond line.');
+});
+
 test('parseTimeToMin extracts the actual time from spreadsheet-exported date-time values', () => {
   assert.equal(Domain.parseTimeToMin('12/30/1899 9:00:00 AM'), 540);
   assert.equal(Domain.parseTimeToMin('12/30/1899 10:00:00 PM'), 1320);

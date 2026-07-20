@@ -221,6 +221,9 @@
     const cleanText = validation && typeof validation.cleanText === 'function'
       ? validation.cleanText
       : function (value) { return String(value == null ? '' : value).trim(); };
+    const cleanMultiline = validation && typeof validation.cleanMultiline === 'function'
+      ? validation.cleanMultiline
+      : cleanText;
     const cleanList = validation && typeof validation.cleanList === 'function'
       ? validation.cleanList
       : splitList;
@@ -271,8 +274,8 @@
       discord: cleanText(pick(row, hdrs, 'discord')),
       altContact: cleanText(pick(row, hdrs, 'alternate contact')),
 
-      description: cleanText(pick(row, hdrs, 'tell us about')),
-      blurb: cleanText(pick(row, hdrs, 'marketing blurb')),
+      description: cleanMultiline(pick(row, hdrs, 'tell us about')),
+      blurb: cleanMultiline(pick(row, hdrs, 'marketing blurb')),
       gameTypes: cleanList(pick(row, hdrs, 'type of games')),
       audiences: cleanList(pick(row, hdrs, 'type of audience')),
 
