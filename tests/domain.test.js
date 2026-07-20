@@ -127,6 +127,45 @@ test('matchFestivalDate only returns dates that actually parse inside the festiv
   assert.equal(Domain.matchFestivalDate('12 Sep', CFG), null);
 });
 
+test('slash dates from the Google Sheets US export parse month-first', () => {
+  // The date-picker "specific date" question exports as M/D/YYYY. Every festival
+  // day must resolve to its real date, not a day-first misread that rolls the
+  // month past 12 and lands in 2027.
+  assert.equal(Domain.matchFestivalDate('10/12/2026', CFG), '2026-10-12');
+  assert.equal(Domain.matchFestivalDate('10/13/2026', CFG), '2026-10-13');
+  assert.equal(Domain.matchFestivalDate('10/17/2026', CFG), '2026-10-17');
+  assert.equal(Domain.matchFestivalDate('10/18/2026', CFG), '2026-10-18');
+  // A leading value > 12 can only be the day, so day-first still resolves.
+  assert.equal(Domain.matchFestivalDate('13/10', CFG), '2026-10-13');
+  // Genuinely ambiguous (both <= 12) keeps the sheet's month-first locale.
+  assert.equal((Domain.parseAnyDate('10/12', CFG) || {}).iso, '2026-10-12');
+  // Out-of-window US dates stay out of the festival window.
+  assert.equal(Domain.matchFestivalDate('11/18/2026', CFG), null);
+});
+
+test('a confirmed all-day event from real sheet exports lands on its festival day', () => {
+  // Mirrors the live "Fortress Takeover" row: US M/D/YYYY date + 1899-epoch
+  // start/end times + a redundant planning-grid entry. It must resolve to a
+  // confirmed Oct 17 schedule spanning all three slots — not tentative, and not
+  // pushed into an out-of-window region.
+  const ev = buildEvent({
+    Organisation: 'Fortress Takeover',
+    'Stage of Planning': 'Confirmed Planning',
+    'If still planning, what day/time are you planning for? [Sat, Oct 17]': 'Morning, Afternoon, Evening',
+    'How long will your event last? (duration)': '12hrs',
+    'What is the specific date being planned?': '10/17/2026',
+    'What is the start time being planned?': '12/30/1899 9:00:00',
+    'What is the end time being planned?': '12/30/1899 22:00:00',
+  });
+
+  assert.deepEqual(ev.dayIsos, ['2026-10-17']);
+  assert.equal(ev.confirmedTiming, true);
+  assert.equal(ev.region, null);
+  assert.equal(ev.startMin, 540);
+  assert.equal(ev.endMin, 1320);
+  assert.deepEqual([...Domain.bucketsForDay(ev, '2026-10-17')], ['AM', 'PM', 'EVE']);
+});
+
 test('out-of-window specific dates stay in before/after regions instead of becoming festival days', () => {
   const afterEvent = buildEvent({
     Organisation: 'Serious Play Lab',
