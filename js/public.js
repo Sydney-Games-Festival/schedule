@@ -71,10 +71,9 @@
   // finer-grained badge above): Players / Makers / Learners. Matches each
   // audience value exactly (not a loose substring search) — "Other Industry
   // Players" is a makers/industry category, not a player one, but a naive
-  // `.includes('player')` check would wrongly catch it too; and "General
-  // Public" is deliberately left unbucketed since it isn't specifically any
-  // of the three.
+  // `.includes('player')` check would wrongly catch it too.
   const AUDIENCE_BUCKET_MAP = {
+    'general public': 'players',
     'beginner players': 'players',
     'experienced players': 'players',
     'beginner makers': 'makers',

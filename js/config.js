@@ -8,7 +8,7 @@
  * Flip USE_SAMPLE_DATA to false once real submissions exist in the sheet.
  * Even when false, a live tab that returns zero events auto-falls back to sample. */
 window.SGF_CONFIG = {
-  USE_SAMPLE_DATA: true,
+  USE_SAMPLE_DATA: false,
 
   EVENTS_CSV_URL:
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ_QICyyTV2CLhcoyQOO_v3HshLMA2MQBGU-dIjFxMLDImYkPN1pCvswFjGinOqqOHAVlLNyGblw6KN/pub?gid=171864363&single=true&output=csv',
