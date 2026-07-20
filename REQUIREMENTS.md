@@ -232,11 +232,36 @@ CSV so every status is visible.
 ## 8. Hosting (GitHub Pages, zero cost)
 
 - Repo `sgf-schedule`, Pages served from `main` branch root.
-- Public page at `/` (`index.html`); admin at `/admin.html` (unlisted URL — obscure,
-  not secret; sensitive contacts are kept out of the public CSV via the sanitised
-  tab, so even the admin page only exposes contacts to whoever has both the URL and
-  the full CSV link).
+- Public page at `/` (`index.html`); admin at `/admin.html`, map at `/map.html`
+  (unlisted URLs — obscure, not secret).
 - Optional `CNAME` for a custom domain later.
+
+### Config split — `js/config.js` vs `js/config.admin.js`
+`js/config.js` is loaded by **every** page, including the public one — anything
+in it is downloaded by every visitor's browser and readable in page source. The
+admin/map-only `ADMIN_CSV_URL` (the full "Form Responses 1" export, containing
+Name/Email/Mobile/Discord/Alternate Contact for every organiser) therefore lives
+in a **separate** file, `js/config.admin.js`, loaded only by `admin.html` and
+`map.html` (right after `config.js`, before `data.js`). **Never add a `<script>`
+tag for `config.admin.js` to `index.html`.** Anything genuinely public (festival
+days, statuses, the sanitised CSV link, the notify-form link) stays in the
+shared `config.js`.
+
+### ⚠️ Known residual exposure — needs a sheet-side fix
+The Google Sheet's "Publish to web" is currently scoped to the **entire
+document**, not just the Sanitised Results sheet. That means the full,
+contact-containing "Form Responses 1" tab is reachable by anyone who has *any*
+published link into this workbook — even just the sanitised one — because
+Google's own `.../pubhtml` page lists every published tab's name and `gid` in
+plaintext, and the CSV export accepts any `gid` under the same publish ID. The
+code fix above stops the link being handed out for free, but a moderately
+curious visitor could still find it via `/pubhtml`.
+**Fix:** in the Sheet, go to File → Share → Publish to web, and change the
+scope from "Entire document" to just the **Sanitised Results** sheet, then
+republish. ⚠️ This may change the published CSV URL — if it does,
+`PUBLIC_CSV_URL` in `js/config.js` needs updating to match, or the public page
+will break. This wasn't done automatically because it modifies live public
+sharing settings on your document.
 
 ---
 
@@ -257,6 +282,13 @@ CSV so every status is visible.
    `false` in `js/config.js` (commit + push) to switch all three pages from the
    sample dataset to live sheet data. Both CSVs are already live and correctly
    shaped — this is the only remaining switch.
+6. ⚠️ **Privacy — republish the sheet scoped to one sheet, not the entire
+   document.** See §8 "Known residual exposure." Right now anyone who finds the
+   public/sanitised CSV link can also reach the full contact-containing tab via
+   Google's own `/pubhtml` tab listing. File → Share → Publish to web → change
+   scope to just **Sanitised Results** → republish. Check whether the CSV URL
+   changes as a result, and if it does, update `PUBLIC_CSV_URL` in
+   `js/config.js` to match (otherwise the public page will break) before pushing.
 
 ## 10. Build order
 1. **Admin page first** — build, review against the full CSV, iterate until it
