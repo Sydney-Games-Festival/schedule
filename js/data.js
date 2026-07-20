@@ -30,9 +30,10 @@
   // `source` is accepted for readability at call sites (loadEvents('admin') /
   // loadEvents('public')) but every page reads the SAME sheet now — there is
   // no separate contact-containing CSV any more. See CFG.EVENTS_CSV_URL.
-  async function loadEvents(source) {
+  async function loadEvents(source, options) {
     const liveUrl = CFG.EVENTS_CSV_URL;
     const sampleUrl = new URL(CFG.SAMPLE_CSV_URL, SITE_ROOT).href;
+    const mode = options && options.mode ? options.mode : 'auto';
 
     async function parseUrl(url) {
       const bust = (url.includes('?') ? '&' : '?') + '_=' + Date.now();
@@ -48,22 +49,34 @@
 
     let usedSample = false;
     let result;
-    if (CFG.USE_SAMPLE_DATA) {
+    let effectiveSource = 'live';
+    if (mode === 'sample') {
       usedSample = true;
+      effectiveSource = 'sample';
+      result = await parseUrl(sampleUrl);
+    } else if (mode === 'live') {
+      effectiveSource = 'live';
+      result = await parseUrl(liveUrl);
+    } else if (CFG.USE_SAMPLE_DATA) {
+      usedSample = true;
+      effectiveSource = 'sample';
       result = await parseUrl(sampleUrl);
     } else {
       try {
         result = await parseUrl(liveUrl);
+        effectiveSource = 'live';
         if (!result.events.length) {
           usedSample = true;
+          effectiveSource = 'sample';
           result = await parseUrl(sampleUrl);
         }
       } catch (e) {
         usedSample = true;
+        effectiveSource = 'sample';
         result = await parseUrl(sampleUrl);
       }
     }
-    return { events: result.events, fields: result.fields, usedSample };
+    return { events: result.events, fields: result.fields, usedSample, effectiveSource, requestedSource: mode };
   }
 
   window.SGF = Object.assign(window.SGF || {}, {

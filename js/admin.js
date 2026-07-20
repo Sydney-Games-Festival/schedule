@@ -36,6 +36,7 @@
 
   const state = {
     all: [],
+    dataSourceMode: CFG.ADMIN_DATA_SOURCE_MODE === 'sample' ? 'sample' : 'live',
     view: 'schedule',
     day: 'all',
     sort: { key: 'day', dir: 1 },
@@ -379,24 +380,43 @@
 
   /* ---------- filter UI ---------- */
   function buildFilterOptions() {
-    $('#statusToggles').innerHTML = CFG.STATUSES.map((s) =>
-      `<button class="status-toggle" data-status="${s.key}" aria-pressed="true">
-         <span class="dot" style="background:${STATUS_COLOR[s.key]}"></span>${esc(s.label)}</button>`).join('');
-    $$('#statusToggles .status-toggle').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const k = btn.dataset.status, on = btn.getAttribute('aria-pressed') === 'true';
-        btn.setAttribute('aria-pressed', String(!on));
-        if (on) state.filters.statuses.delete(k); else state.filters.statuses.add(k);
-        render();
+    if (!$('#statusToggles').children.length) {
+      $('#statusToggles').innerHTML = CFG.STATUSES.map((s) =>
+        `<button class="status-toggle" data-status="${s.key}" aria-pressed="true">
+           <span class="dot" style="background:${STATUS_COLOR[s.key]}"></span>${esc(s.label)}</button>`).join('');
+      $$('#statusToggles .status-toggle').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const k = btn.dataset.status, on = btn.getAttribute('aria-pressed') === 'true';
+          btn.setAttribute('aria-pressed', String(!on));
+          if (on) state.filters.statuses.delete(k); else state.filters.statuses.add(k);
+          render();
+        });
       });
-    });
+    }
     const aud = new Set(), game = new Set();
     state.all.forEach((ev) => { ev.audiences.forEach((a) => aud.add(a)); ev.gameTypes.forEach((g) => game.add(g)); });
-    $('#audienceSel').insertAdjacentHTML('beforeend', [...aud].sort().map((a) => `<option>${esc(a)}</option>`).join(''));
-    $('#gameSel').insertAdjacentHTML('beforeend', [...game].sort().map((g) => `<option>${esc(g)}</option>`).join(''));
-    $('#daySel').insertAdjacentHTML('beforeend',
+    $('#audienceSel').innerHTML = '<option value="">All audiences</option>' + [...aud].sort().map((a) => `<option>${esc(a)}</option>`).join('');
+    $('#gameSel').innerHTML = '<option value="">All game types</option>' + [...game].sort().map((g) => `<option>${esc(g)}</option>`).join('');
+    $('#daySel').innerHTML = '<option value="">All days</option>' +
       CFG.FESTIVAL_DAYS.map((d) => `<option value="${d.iso}">${d.label}</option>`).join('') +
-      '<option value="unscheduled">Unscheduled / TBD</option>');
+      '<option value="unscheduled">Unscheduled / TBD</option>';
+    $('#audienceSel').value = state.filters.audience;
+    $('#gameSel').value = state.filters.game;
+    $('#daySel').value = state.filters.day;
+  }
+
+  function renderSourceToggle() {
+    const wrap = $('#sourceToggle');
+    if (!CFG.ADMIN_SOURCE_TOGGLE_ENABLED) {
+      wrap.hidden = true;
+      wrap.innerHTML = '';
+      return;
+    }
+    wrap.hidden = false;
+    wrap.innerHTML = ['live', 'sample'].map((mode) =>
+      `<button class="source-toggle-btn ${state.dataSourceMode === mode ? 'active' : ''}" data-source-mode="${mode}">
+        ${mode === 'live' ? 'Live' : 'Sample'}
+      </button>`).join('');
   }
 
   function wireControls() {
@@ -412,6 +432,13 @@
     $('#refreshBtn').addEventListener('click', load);
     $('#themeBtn').addEventListener('click', toggleTheme);
     $('#backdrop').addEventListener('click', closeDrawer);
+    $('#sourceToggle').addEventListener('click', (e) => {
+      const t = e.target.closest('[data-source-mode]');
+      if (!t || t.dataset.sourceMode === state.dataSourceMode) return;
+      state.dataSourceMode = t.dataset.sourceMode;
+      renderSourceToggle();
+      load();
+    });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); });
 
     $('#dayStrip').addEventListener('click', (e) => {
@@ -449,16 +476,21 @@
 
   /* ---------- load ---------- */
   async function load() {
+    const oldError = $('.error-box');
+    if (oldError) oldError.remove();
     $('#loading').hidden = false;
     $('#loading').textContent = 'Loading events…';
+    renderSourceToggle();
     try {
-      const { events, usedSample } = await window.SGF.loadEvents('admin');
+      const mode = CFG.ADMIN_SOURCE_TOGGLE_ENABLED ? state.dataSourceMode : (CFG.ADMIN_DATA_SOURCE_MODE === 'sample' ? 'sample' : 'live');
+      const { events, effectiveSource } = await window.SGF.loadEvents('admin', { mode });
       events.forEach((ev, i) => (ev._id = i));
       state.all = events;
       const pill = $('#sourcePill');
-      pill.textContent = usedSample ? 'Sample data' : 'Live data';
-      pill.className = 'source-pill ' + (usedSample ? 'sample' : 'live');
-      if (!$('#statusToggles').children.length) buildFilterOptions();
+      pill.textContent = effectiveSource === 'sample' ? 'Sample data' : 'Live data';
+      pill.className = 'source-pill ' + (effectiveSource === 'sample' ? 'sample' : 'live');
+      renderSourceToggle();
+      buildFilterOptions();
       $('#loading').hidden = true;
       render();
     } catch (err) {
@@ -475,6 +507,7 @@
 
   try { const t = localStorage.getItem('sgf-theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch (e) {}
   wireControls();
+  renderSourceToggle();
   syncTopbarHeight();
   window.addEventListener('resize', syncTopbarHeight);
   load();

@@ -10,6 +10,12 @@
 window.SGF_CONFIG = {
   USE_SAMPLE_DATA: false,
 
+  // Admin schedule page only: choose the default source and whether the page
+  // exposes a live/sample toggle. Public pages still use USE_SAMPLE_DATA plus
+  // their existing live-to-sample fallback behavior.
+  ADMIN_DATA_SOURCE_MODE: 'live',
+  ADMIN_SOURCE_TOGGLE_ENABLED: true,
+
   EVENTS_CSV_URL:
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ_QICyyTV2CLhcoyQOO_v3HshLMA2MQBGU-dIjFxMLDImYkPN1pCvswFjGinOqqOHAVlLNyGblw6KN/pub?gid=171864363&single=true&output=csv',
 

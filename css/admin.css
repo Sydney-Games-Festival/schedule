@@ -65,6 +65,21 @@ h1, h2, h3, .head { font-family: var(--font-head); font-weight: 400; letter-spac
 :root[data-theme='dark'] .source-pill.sample { background: #3a2c12; color: #f0c079; border-color:#5a4520;}
 :root[data-theme='dark'] .source-pill.live { background:#12331f; color:#7fd3a2; border-color:#245c3a;}
 
+.source-toggle { display: inline-flex; align-items: center; gap: 6px; }
+.source-toggle-btn {
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.source-toggle-btn:hover { border-color: var(--blue); color: var(--blue); }
+.source-toggle-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+
 /* ---- Filter bar ---- */
 .filters {
   background: var(--card); border-bottom: 1px solid var(--line);
