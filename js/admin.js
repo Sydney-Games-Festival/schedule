@@ -195,6 +195,25 @@
       }
       return rows;
     }
+    if (kind === 'type-family') {
+      const rows = AdminStats.GAME_TYPE_FAMILIES.map((family) => ({
+        key: family.key,
+        label: family.label,
+        match: (ev) => AdminStats.eventMatchesGameTypeFamily(ev, family.key),
+      }));
+      const hasUncategorised = list.some((ev) =>
+        ev.gameTypes.length && !AdminStats.GAME_TYPE_FAMILIES.some((family) => AdminStats.eventMatchesGameTypeFamily(ev, family.key))
+      );
+      if (hasUncategorised) {
+        rows.push({
+          key: 'uncategorised',
+          label: 'Other / uncategorised',
+          match: (ev) =>
+            ev.gameTypes.length && !AdminStats.GAME_TYPE_FAMILIES.some((family) => AdminStats.eventMatchesGameTypeFamily(ev, family.key)),
+        });
+      }
+      return rows;
+    }
     const types = [...new Set(list.flatMap((ev) => ev.gameTypes))].sort((a, b) => a.localeCompare(b));
     return types.map((type) => ({
       key: type,
@@ -246,6 +265,10 @@
       keepZeroRows: true,
       bucketsForEvent: statsBucketsForEvent,
     });
+    const typeFamilySummary = AdminStats.buildSummary(list, columns, statsRowDefs(list, 'type-family'), {
+      keepZeroRows: true,
+      bucketsForEvent: statsBucketsForEvent,
+    });
     const typeSummary = AdminStats.buildSummary(list, columns, statsRowDefs(list, 'type'), {
       bucketsForEvent: statsBucketsForEvent,
     });
@@ -266,7 +289,8 @@
         ${statsKpiHtml('TBD / unscheduled', unscheduledBucket, 'No confirmed festival-day date yet.', 'muted')}
       </div>
       ${statsTableHtml('Stage', 'Counts by current filtered event set.', stageSummary)}
-      ${statsTableHtml('Game type', 'Events can appear in more than one game-type row.', typeSummary)}
+      ${statsTableHtml('Game family', 'Screen and tabletop rollups. Events can appear in more than one family row.', typeFamilySummary)}
+      ${statsTableHtml('Game type', 'Detailed breakdown. Events can appear in more than one game-type row.', typeSummary)}
     `;
   }
 

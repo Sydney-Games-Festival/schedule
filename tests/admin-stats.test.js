@@ -62,3 +62,16 @@ test('eventDayBuckets keeps before/after regions separate from TBD events', () =
     [AdminStats.OTHER_KEY]
   );
 });
+
+test('game type families recognise screen and tabletop events independently', () => {
+  assert.equal(AdminStats.matchesGameTypeFamily('PC video games', AdminStats.SCREEN_DIGITAL_KEY), true);
+  assert.equal(AdminStats.matchesGameTypeFamily('Arcade / Digital Game Cabinets', AdminStats.SCREEN_DIGITAL_KEY), true);
+  assert.equal(AdminStats.matchesGameTypeFamily('Board Games', AdminStats.TABLETOP_NON_DIGITAL_KEY), true);
+  assert.equal(AdminStats.matchesGameTypeFamily('Tabletop RPGs', AdminStats.TABLETOP_NON_DIGITAL_KEY), true);
+  assert.equal(AdminStats.matchesGameTypeFamily('Serious Games', AdminStats.SCREEN_DIGITAL_KEY), false);
+  assert.equal(AdminStats.matchesGameTypeFamily('Serious Games', AdminStats.TABLETOP_NON_DIGITAL_KEY), false);
+
+  const hybridEvent = { gameTypes: ['PC video games', 'Board Games'] };
+  assert.equal(AdminStats.eventMatchesGameTypeFamily(hybridEvent, AdminStats.SCREEN_DIGITAL_KEY), true);
+  assert.equal(AdminStats.eventMatchesGameTypeFamily(hybridEvent, AdminStats.TABLETOP_NON_DIGITAL_KEY), true);
+});

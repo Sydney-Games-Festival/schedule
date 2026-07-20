@@ -6,6 +6,39 @@
   const BEFORE_KEY = 'before';
   const AFTER_KEY = 'after';
   const OTHER_KEY = 'other';
+  const SCREEN_DIGITAL_KEY = 'screen-digital';
+  const TABLETOP_NON_DIGITAL_KEY = 'tabletop-non-digital';
+
+  const GAME_TYPE_FAMILIES = [
+    {
+      key: SCREEN_DIGITAL_KEY,
+      label: 'Screen (Digital)',
+      patterns: [
+        /\barcade\b/i,
+        /\bdigital\b/i,
+        /\bpc\b/i,
+        /\bconsole\b/i,
+        /\bmobile\b/i,
+        /\bvideo game/i,
+        /\bvr\b/i,
+        /\bar\b/i,
+      ],
+    },
+    {
+      key: TABLETOP_NON_DIGITAL_KEY,
+      label: 'Tabletop (Non-Digital)',
+      patterns: [
+        /\bboard\b/i,
+        /\bcard\b/i,
+        /\btcg\b/i,
+        /\btabletop\b/i,
+        /\brpg\b/i,
+        /\bmegagame/i,
+        /\bminiature/i,
+        /\blarp\b/i,
+      ],
+    },
+  ];
 
   function defaultColumns(cfg) {
     return cfg.FESTIVAL_DAYS.map((d) => ({ key: d.iso, label: d.short }))
@@ -24,6 +57,16 @@
 
   function emptyCounts(columns) {
     return Object.fromEntries(columns.map((col) => [col.key, 0]));
+  }
+
+  function matchesGameTypeFamily(type, familyKey) {
+    const family = GAME_TYPE_FAMILIES.find((item) => item.key === familyKey);
+    if (!family) return false;
+    return family.patterns.some((pattern) => pattern.test(type));
+  }
+
+  function eventMatchesGameTypeFamily(ev, familyKey) {
+    return ev.gameTypes.some((type) => matchesGameTypeFamily(type, familyKey));
   }
 
   function buildSummary(events, columns, rowDefs, options) {
@@ -59,9 +102,14 @@
   return {
     AFTER_KEY,
     BEFORE_KEY,
+    GAME_TYPE_FAMILIES,
     OTHER_KEY,
+    SCREEN_DIGITAL_KEY,
+    TABLETOP_NON_DIGITAL_KEY,
     buildSummary,
     defaultColumns,
+    eventMatchesGameTypeFamily,
     eventDayBuckets,
+    matchesGameTypeFamily,
   };
 });
