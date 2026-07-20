@@ -24,12 +24,10 @@ body {
   background: linear-gradient(135deg, var(--bg-1), var(--bg-2));
   min-height: 100vh;
 }
-/* Decorative split top rule from the design */
+/* Decorative top rule from the design */
 body::before {
   content: ''; position: fixed; top: 0; left: 0; right: 0; height: 4px; z-index: 30;
-  background:
-    linear-gradient(var(--orange), var(--orange)) left top / calc(50% - 30px) 100% no-repeat,
-    linear-gradient(var(--orange), var(--orange)) right top / calc(50% - 30px) 100% no-repeat;
+  background: var(--orange);
 }
 
 .layout { display: grid; grid-template-columns: 150px 1fr; gap: 8px; max-width: 1240px; margin: 0 auto; padding: 24px 24px 80px; }
@@ -42,10 +40,11 @@ body::before {
   cursor: pointer; transition: color .12s, transform .12s; letter-spacing: .01em;
 }
 .rail-item:hover { color: var(--orange); transform: translateX(2px); }
-.rail-item.active { color: var(--orange); font-weight: 700;
-  text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 5px; }
+.rail-item.active { color: var(--orange); font-weight: 700; }
+.rail-item .lbl { display: inline-block; }
+.rail-item.active .lbl { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 4px; }
 .rail-item .sub { display: block; font-family: var(--font-body); font-weight: 500; font-size: 11px;
-  color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin-top: 3px; }
+  color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin-top: 7px; }
 .rail-item.active .sub { color: var(--orange-deep); }
 
 /* ---- Day header ---- */

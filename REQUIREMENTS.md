@@ -158,12 +158,13 @@ Matches the supplied screenshot. Reads the **sanitised** CSV and shows **only
 
 **Design (from screenshot) — built.** Fonts: **Fredoka** (display) + **Space
 Grotesk** (body).
-- Warm peach gradient background, orange accent, rounded white cards, split
-  orange top rule.
-- **Left date rail:** vertical list of scopes — **all 7 festival days always
-  shown**, even with zero events yet, plus **Before / After / Soon(Other)**
-  buckets when they hold at least one published event; active scope underlined.
-  Collapses to a horizontal scroll strip on mobile.
+- Warm peach gradient background, orange accent, rounded white cards, a single
+  continuous orange top rule.
+- **Left date rail:** vertical list of scopes — **all 7 festival days plus
+  Before / After / Soon(Other) always shown**, even with zero events yet, so no
+  date option ever silently disappears; active scope's day label (not the
+  day-of-week sub-label) is underlined. Collapses to a horizontal scroll strip
+  on mobile.
 - **Empty day state:** a day with no published events shows a dashed card with
   "No events announced yet for this date — check back soon!" and a **Get
   notified of updates** button linking to the updates-signup form

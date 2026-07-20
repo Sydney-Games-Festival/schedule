@@ -68,11 +68,12 @@
   }
   function buildScopes() {
     const scopes = [];
-    // Catch-all buckets only appear when they actually hold events.
-    if (state.events.some((e) => e.region === 'before')) scopes.push(scopeFor('before'));
-    // Every festival day is always shown, even with zero events yet.
+    // Before / every festival day / After / Other — all always shown, even with
+    // zero events yet, so the rail never silently drops a date option.
+    scopes.push(scopeFor('before'));
     CFG.FESTIVAL_DAYS.forEach((d) => scopes.push({ key: d.iso, short: d.short, sub: d.dow }));
-    ['after', 'other'].forEach((k) => { if (state.events.some((e) => e.region === k)) scopes.push(scopeFor(k)); });
+    scopes.push(scopeFor('after'));
+    scopes.push(scopeFor('other'));
     return scopes;
   }
   const scopeFor = (k) => { const r = REGIONS.find((x) => x.key === k); return { key: k, short: r.short, sub: r.sub }; };
@@ -81,7 +82,7 @@
   function railHtml() {
     return state.scopes.map((s) =>
       `<button class="rail-item ${s.key === state.selected ? 'active' : ''}" data-scope="${esc(s.key)}">
-        ${esc(s.short)}<span class="sub">${esc(s.sub)}</span></button>`).join('');
+        <span class="lbl">${esc(s.short)}</span><span class="sub">${esc(s.sub)}</span></button>`).join('');
   }
 
   function footCell(ico, text) {
