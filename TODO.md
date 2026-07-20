@@ -30,4 +30,4 @@
 - [x] Refine the admin stats styling with corrected table alignment, clearer striping, and stronger KPI emphasis.
 - [x] Split admin stats tentative/unscheduled events from events scheduled outside the festival-day window.
 - [x] Add Screen (Digital) and Tabletop (Non-Digital) rollups to the admin game-type stats while keeping the detailed breakdown.
-- [ ] Add a tooltip to the admin Game Family stats table explaining the family mapping and uncategorised bucket.
+- [x] Add a tooltip to the admin Game Family stats table explaining the family mapping and uncategorised bucket.

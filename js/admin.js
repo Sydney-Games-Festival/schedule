@@ -223,6 +223,18 @@
   }
 
   function statsTableHtml(title, subtitle, summary) {
+    return statsTableHtmlWithOptions(title, subtitle, summary, {});
+  }
+
+  function statsTooltipHtml(text, id) {
+    return `<span class="stats-help-wrap">
+      <button type="button" class="stats-help" aria-label="${esc(text)}" aria-describedby="${esc(id)}">i</button>
+      <span class="stats-tooltip" id="${esc(id)}" role="tooltip">${esc(text)}</span>
+    </span>`;
+  }
+
+  function statsTableHtmlWithOptions(title, subtitle, summary, options) {
+    const opts = options || {};
     const head = summary.columns.map((col) => `<th class="metric-head">${esc(col.label)}</th>`).join('');
     const body = summary.rows.length
       ? summary.rows.map((row) =>
@@ -237,9 +249,15 @@
       ${summary.columns.map((col) => `<td>${summary.totals.counts[col.key]}</td>`).join('')}
       <td class="total-col">${summary.totals.total}</td>
     </tr>`;
+    const tooltip = opts.tooltipText && opts.tooltipId
+      ? statsTooltipHtml(opts.tooltipText, opts.tooltipId)
+      : '';
     return `<section class="stats-block">
       <header class="stats-head">
-        <h3>${esc(title)}</h3>
+        <div class="stats-headline">
+          <h3>${esc(title)}</h3>
+          ${tooltip}
+        </div>
         <p>${esc(subtitle)}</p>
       </header>
       <div class="stats-table-wrap">
@@ -260,6 +278,7 @@
   }
 
   function renderStats(list) {
+    const gameFamilyTooltip = 'Screen (Digital) matches arcade, digital, PC, console, mobile, video game, VR, or AR labels. Tabletop (Non-Digital) matches board, card or TCG, tabletop, RPG, megagame, miniature, or LARP labels. Other / uncategorised means a game type matched neither family. Events with mixed game types can count in both family rows.';
     const columns = AdminStats.defaultColumns(CFG);
     const stageSummary = AdminStats.buildSummary(list, columns, statsRowDefs(list, 'status'), {
       keepZeroRows: true,
@@ -289,7 +308,10 @@
         ${statsKpiHtml('TBD / unscheduled', unscheduledBucket, 'No confirmed festival-day date yet.', 'muted')}
       </div>
       ${statsTableHtml('Stage', 'Counts by current filtered event set.', stageSummary)}
-      ${statsTableHtml('Game family', 'Screen and tabletop rollups. Events can appear in more than one family row.', typeFamilySummary)}
+      ${statsTableHtmlWithOptions('Game family', 'Screen and tabletop rollups. Events can appear in more than one family row.', typeFamilySummary, {
+        tooltipId: 'game-family-tooltip',
+        tooltipText: gameFamilyTooltip,
+      })}
       ${statsTableHtml('Game type', 'Detailed breakdown. Events can appear in more than one game-type row.', typeSummary)}
     `;
   }
