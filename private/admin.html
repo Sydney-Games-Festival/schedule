@@ -25,6 +25,7 @@
       <button id="viewSchedule" class="chip-btn active">Schedule</button>
       <button id="viewDay" class="chip-btn">Day</button>
       <button id="viewList" class="chip-btn">List</button>
+      <button id="viewStats" class="chip-btn">Stats</button>
       <button id="refreshBtn" class="chip-btn" title="Reload data">↻ Refresh</button>
       <a class="chip-btn" href="map.html">Map</a>
       <a class="chip-btn" href="../map.html">Public map</a>
@@ -88,6 +89,7 @@
         <tbody id="listBody"></tbody>
       </table>
     </div>
+    <div id="statsView" class="stats-view" hidden></div>
     <div id="emptyState" class="empty-state" hidden>No events match these filters.</div>
   </main>
 
@@ -97,6 +99,7 @@
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="../js/config.js?v=3"></script>
   <script src="../js/domain.js?v=1"></script>
+  <script src="../js/admin-stats.js?v=1"></script>
   <script src="../js/filters.js?v=1"></script>
   <script src="../js/links.js?v=1"></script>
   <script src="../js/validation.js?v=1"></script>

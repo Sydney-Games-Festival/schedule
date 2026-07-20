@@ -2,6 +2,7 @@
  * Views: Day (single day, grouped AM/PM/EVE) · Calendar (time × venue grid) · List (sortable). */
 (function () {
   const CFG = window.SGF_CONFIG;
+  const AdminStats = window.SGF_ADMIN_STATS;
   const Domain = window.SGF_DOMAIN;
   const Filters = window.SGF_FILTERS;
   const Links = window.SGF_LINKS;
@@ -174,6 +175,85 @@
       if (!html) html = '<div class="empty-state">No events in this group.</div>';
     }
     $('#scheduleView').innerHTML = html;
+  }
+
+  function statsBucketsForEvent(ev) {
+    if (state.filters.day && state.filters.day !== 'unscheduled') return [state.filters.day];
+    if (state.filters.day === 'unscheduled') return [AdminStats.OTHER_KEY];
+    return AdminStats.eventDayBuckets(ev);
+  }
+
+  function statsRowDefs(list, kind) {
+    if (kind === 'status') {
+      const rows = CFG.STATUSES.map((status) => ({
+        key: status.key,
+        label: status.label,
+        match: (ev) => ev.status.key === status.key,
+      }));
+      if (list.some((ev) => ev.status.key === 'unknown')) {
+        rows.push({ key: 'unknown', label: 'Unknown', match: (ev) => ev.status.key === 'unknown' });
+      }
+      return rows;
+    }
+    const types = [...new Set(list.flatMap((ev) => ev.gameTypes))].sort((a, b) => a.localeCompare(b));
+    return types.map((type) => ({
+      key: type,
+      label: type,
+      match: (ev) => ev.gameTypes.includes(type),
+    }));
+  }
+
+  function statsTableHtml(title, subtitle, summary) {
+    const head = summary.columns.map((col) => `<th>${esc(col.label)}</th>`).join('');
+    const body = summary.rows.length
+      ? summary.rows.map((row) =>
+        `<tr>
+          <td>${esc(row.label)}</td>
+          ${summary.columns.map((col) => `<td>${row.counts[col.key]}</td>`).join('')}
+          <td>${row.total}</td>
+        </tr>`).join('')
+      : `<tr><td>No matching rows</td>${summary.columns.map(() => '<td>0</td>').join('')}<td>0</td></tr>`;
+    const totalRow = `<tr class="total-row">
+      <td>Total</td>
+      ${summary.columns.map((col) => `<td>${summary.totals.counts[col.key]}</td>`).join('')}
+      <td>${summary.totals.total}</td>
+    </tr>`;
+    return `<section class="stats-block">
+      <header class="stats-head">
+        <h3>${esc(title)}</h3>
+        <p>${esc(subtitle)}</p>
+      </header>
+      <div class="stats-table-wrap">
+        <table class="stats-table">
+          <thead><tr><th>${esc(title)}</th>${head}<th>Total</th></tr></thead>
+          <tbody>${body}${totalRow}</tbody>
+        </table>
+      </div>
+    </section>`;
+  }
+
+  function renderStats(list) {
+    const columns = AdminStats.defaultColumns(CFG);
+    const stageSummary = AdminStats.buildSummary(list, columns, statsRowDefs(list, 'status'), {
+      keepZeroRows: true,
+      bucketsForEvent: statsBucketsForEvent,
+    });
+    const typeSummary = AdminStats.buildSummary(list, columns, statsRowDefs(list, 'type'), {
+      bucketsForEvent: statsBucketsForEvent,
+    });
+    const published = list.filter((ev) => ev.published).length;
+    const timed = list.filter((ev) => Domain.hasTimedSchedule(ev)).length;
+    const otherBucket = list.filter((ev) => !ev.dayIsos.length).length;
+    $('#statsView').innerHTML = `
+      <div class="stats-overview">
+        <div class="stats-kpi"><div class="kicker">Filtered events</div><div class="value">${list.length}</div></div>
+        <div class="stats-kpi"><div class="kicker">Published</div><div class="value">${published}</div></div>
+        <div class="stats-kpi"><div class="kicker">Timed</div><div class="value">${timed}</div></div>
+        <div class="stats-kpi"><div class="kicker">Other / no day</div><div class="value">${otherBucket}</div></div>
+      </div>
+      ${statsTableHtml('Stage', 'Counts by current filtered event set.', stageSummary)}
+      ${statsTableHtml('Game type', 'Events can appear in more than one game-type row.', typeSummary)}
+    `;
   }
 
   /* ---------- Day view (single day, time × venue calendar grid) ---------- */
@@ -371,11 +451,13 @@
     $('#scheduleView').hidden = state.view !== 'schedule';
     $('#dayView').hidden = state.view !== 'day';
     $('#listWrap').hidden = state.view !== 'list';
-    $('#emptyState').hidden = !(state.view === 'list' && list.length === 0);
+    $('#statsView').hidden = state.view !== 'stats';
+    $('#emptyState').hidden = !((state.view === 'list' || state.view === 'stats') && list.length === 0);
 
     if (state.view === 'schedule') renderSchedule(list);
     else if (state.view === 'day') renderDay(list);
-    else renderList(list);
+    else if (state.view === 'list') renderList(list);
+    else renderStats(list);
   }
 
   /* ---------- filter UI ---------- */
@@ -429,6 +511,7 @@
     $('#viewSchedule').addEventListener('click', () => setView('schedule'));
     $('#viewDay').addEventListener('click', () => setView('day'));
     $('#viewList').addEventListener('click', () => setView('list'));
+    $('#viewStats').addEventListener('click', () => setView('stats'));
     $('#refreshBtn').addEventListener('click', load);
     $('#themeBtn').addEventListener('click', toggleTheme);
     $('#backdrop').addEventListener('click', closeDrawer);
@@ -466,6 +549,7 @@
     $('#viewSchedule').classList.toggle('active', v === 'schedule');
     $('#viewDay').classList.toggle('active', v === 'day');
     $('#viewList').classList.toggle('active', v === 'list');
+    $('#viewStats').classList.toggle('active', v === 'stats');
     render();
   }
   function toggleTheme() {
