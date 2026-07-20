@@ -1,12 +1,11 @@
-/* SGF Schedule — shared configuration.
+/* SGF Schedule — SHARED configuration, loaded by every page (admin, public,
+ * map). Anything in here is downloaded by every visitor to the public site —
+ * do not add the admin (contact-containing) CSV link here. It lives in
+ * js/config.admin.js, which only admin.html and map.html load.
  * Flip USE_SAMPLE_DATA to false once real submissions exist in the sheet.
  * Even when false, a live tab that returns zero events auto-falls back to sample. */
 window.SGF_CONFIG = {
   USE_SAMPLE_DATA: true,
-
-  // Full "Form Responses 1" tab (has contact details) — used by the ADMIN page.
-  ADMIN_CSV_URL:
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ_QICyyTV2CLhcoyQOO_v3HshLMA2MQBGU-dIjFxMLDImYkPN1pCvswFjGinOqqOHAVlLNyGblw6KN/pub?gid=1037089166&single=true&output=csv',
 
   // Sanitised "Sanitised Results" tab (no contacts) — used by the PUBLIC page.
   PUBLIC_CSV_URL:
