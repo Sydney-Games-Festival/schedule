@@ -137,8 +137,17 @@
 
     m = t.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
     if (m) {
+      const a = +m[1];
+      const b = +m[2];
       const y = m[3] ? (+m[3] < 100 ? 2000 + +m[3] : +m[3]) : year;
-      const d = new Date(y, +m[2] - 1, +m[1]);
+      // Google Sheets exports dates as US M/D/YYYY, so default to month-first.
+      // A value > 12 can only be the day, which resolves the day-first case
+      // (e.g. "13/10" -> 13 Oct); when both are <= 12 it is genuinely ambiguous
+      // so we keep the sheet's month-first locale (e.g. "10/12" -> 12 Oct).
+      let month = a;
+      let day = b;
+      if (a > 12 && b <= 12) { month = b; day = a; }
+      const d = new Date(y, month - 1, day);
       return { date: d, iso: isoOf(d) };
     }
 
