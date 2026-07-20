@@ -5,6 +5,8 @@
  * every status is visible, same as the admin page. */
 (function () {
   const CFG = window.SGF_CONFIG;
+  const Domain = window.SGF_DOMAIN;
+  const Filters = window.SGF_FILTERS;
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const esc = (s) =>
@@ -27,24 +29,13 @@
   let map, markerLayer;
 
   function matches(ev) {
-    const f = state.filters;
-    if (!f.statuses.has(ev.status.key)) return false;
-    if (f.pub === 'y' && !ev.published) return false;
-    if (f.pub === 'n' && ev.published) return false;
-    if (f.day) {
-      if (f.day === 'unscheduled') { if (ev.scheduled) return false; }
-      else if (!ev.dayIsos.includes(f.day)) return false;
-    }
-    return true;
+    return Filters.matchesMapFilters(ev, state.filters);
   }
 
   function timeLabel(ev) {
-    if (ev.confirmedTiming && ev.timeText) return ev.timeText;
-    const slots = [...new Set(ev.schedule.filter((e) => e.tentative && e.slot).map((e) => e.slot))];
-    return slots.join(' · ') || (ev.outsideLabel ? ev.outsideLabel : '—');
+    return Domain.eventTimeLabel(ev, { includeOutsideLabel: true }) || '—';
   }
-  const dayShortsFor = (ev) =>
-    ev.dayIsos.map((iso) => (dayByIso[iso] ? dayByIso[iso].short : iso)).join(', ') || (ev.outsideLabel || 'TBD');
+  const dayShortsFor = (ev) => Domain.dayShortsFor(ev, dayByIso, { includeOutsideLabel: true }) || 'TBD';
 
   function groupByVenue(list) {
     const groups = new Map();

@@ -2,6 +2,9 @@
  * Views: Day (single day, grouped AM/PM/EVE) · Calendar (time × venue grid) · List (sortable). */
 (function () {
   const CFG = window.SGF_CONFIG;
+  const Domain = window.SGF_DOMAIN;
+  const Filters = window.SGF_FILTERS;
+  const Links = window.SGF_LINKS;
   // Organiser contact details (Name/Email/Mobile/Discord/Alt Contact) are
   // excluded from every published CSV for privacy — look them up directly in
   // the source sheet instead of the app ever fetching/displaying them.
@@ -48,45 +51,19 @@
   };
   function timeLabel(ev) {
     if (ev.confirmedTiming && ev.startTime) return ev.endTime ? `${ev.startTime}–${ev.endTime}` : ev.startTime;
-    const slots = [...new Set(ev.schedule.filter((e) => e.tentative && e.slot).map((e) => e.slot))];
+    const slots = Domain.tentativeSlots(ev);
     return slots.join(' · ');
   }
-  const dayShortsFor = (ev) => ev.dayIsos.map((iso) => (dayByIso[iso] ? dayByIso[iso].short : iso)).join(', ');
+  const dayShortsFor = (ev) => Domain.dayShortsFor(ev, dayByIso);
 
   // Which AM/PM/EVE buckets does an event fall in on a given day?
   function bucketsFor(ev, iso) {
-    const entry = ev.schedule.find((e) => e.iso === iso);
-    const out = new Set();
-    if (entry && !entry.tentative && ev.startMin != null) {
-      out.add(ev.startMin < 12 * 60 ? 'AM' : ev.startMin < 17 * 60 ? 'PM' : 'EVE');
-    } else if (entry && entry.slot) {
-      const s = entry.slot.toLowerCase();
-      if (s.includes('morning')) out.add('AM');
-      if (s.includes('afternoon')) out.add('PM');
-      if (s.includes('evening')) out.add('EVE');
-    }
-    if (!out.size) out.add('AM'); // untimed → show once under AM
-    return out;
+    return Domain.bucketsForDay(ev, iso);
   }
 
   /* ---------- filtering ---------- */
   function matches(ev) {
-    const f = state.filters;
-    if (!f.statuses.has(ev.status.key)) return false;
-    if (f.audience && !ev.audiences.includes(f.audience)) return false;
-    if (f.game && !ev.gameTypes.includes(f.game)) return false;
-    if (f.pub === 'y' && !ev.published) return false;
-    if (f.pub === 'n' && ev.published) return false;
-    if (f.day) {
-      if (f.day === 'unscheduled') { if (ev.scheduled) return false; }
-      else if (!ev.dayIsos.includes(f.day)) return false;
-    }
-    if (f.search) {
-      const hay = [ev.title, ev.organisation, ev.organiser, ev.blurb, ev.description,
-        ev.gameTypes.join(' '), ev.audiences.join(' '), ev.location].join(' ').toLowerCase();
-      if (!hay.includes(f.search.toLowerCase())) return false;
-    }
-    return true;
+    return Filters.matchesAdminFilters(ev, state.filters);
   }
 
   /* ---------- event card (compact) ---------- */
@@ -316,18 +293,8 @@
   }
 
   /* ---------- drawer ---------- */
-  function scheduleSummary(ev) {
-    if (ev.confirmedTiming) {
-      const d = dayByIso[ev.dayIsos[0]];
-      const t = ev.startTime ? (ev.endTime ? `${ev.startTime}–${ev.endTime}` : ev.startTime) : '';
-      return `Confirmed: ${d ? d.label : ev.dayIsos[0]}${t ? ' · ' + t : ''}`;
-    }
-    if (ev.schedule.length) return 'Tentative: ' + ev.schedule.map((e) => `${dayByIso[e.iso].short} (${e.slot})`).join(', ');
-    if (ev.otherDate) return 'Other date: ' + ev.otherDate;
-    return 'Not scheduled';
-  }
   const drow = (dt, dd) => (dd ? `<dt>${esc(dt)}</dt><dd>${dd}</dd>` : '');
-  const dlink = (url) => (url ? `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a>` : '');
+  const dlink = (url) => (Links.hasUrl(url) ? `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a>` : '');
   function openDrawer(ev) {
     $('#drawer').innerHTML = `
       <header><h2>${esc(ev.title)}</h2><button class="close" aria-label="Close">×</button></header>
@@ -335,7 +302,7 @@
         <div class="meta-row">${statusBadge(ev)}
           <span class="pub-dot ${ev.published ? 'y' : 'n'}">${ev.published ? 'Published' : 'Not published'}</span></div>
         ${ev.thumbnail ? `<img class="thumb-prev" src="${esc(ev.thumbnail)}" alt="" onerror="this.remove()">` : ''}
-        <section><h3>Schedule</h3><p class="desc">${esc(scheduleSummary(ev))}</p></section>
+        <section><h3>Schedule</h3><p class="desc">${esc(Domain.scheduleSummary(ev, dayByIso))}</p></section>
         ${ev.description ? `<section><h3>About</h3><p class="desc">${esc(ev.description)}</p></section>` : ''}
         ${ev.blurb ? `<section><h3>Marketing blurb</h3><p class="desc">${esc(ev.blurb)}</p></section>` : ''}
         <section><h3>Details</h3><dl>

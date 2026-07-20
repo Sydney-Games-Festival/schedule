@@ -6,6 +6,8 @@
  * Defaults to every venue across the whole festival; a day filter narrows it. */
 (function () {
   const CFG = window.SGF_CONFIG;
+  const Domain = window.SGF_DOMAIN;
+  const Links = window.SGF_LINKS;
   const $ = (s, r = document) => r.querySelector(s);
   const esc = (s) =>
     String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
@@ -24,11 +26,9 @@
   }
 
   function timeLabel(ev) {
-    if (ev.confirmedTiming && ev.timeText) return ev.timeText;
-    const slots = [...new Set(ev.schedule.filter((e) => e.tentative && e.slot).map((e) => e.slot))];
-    return slots.join(' · ') || '—';
+    return Domain.eventTimeLabel(ev) || '—';
   }
-  const dayShortsFor = (ev) => ev.dayIsos.map((iso) => (dayByIso[iso] ? dayByIso[iso].short : iso)).join(', ') || 'TBD';
+  const dayShortsFor = (ev) => Domain.dayShortsFor(ev, dayByIso) || 'TBD';
 
   function groupByVenue(list) {
     const groups = new Map();
@@ -49,7 +49,7 @@
       .map((ev) => `<div class="pop-ev">
           <span class="pop-name">${esc(ev.title)}</span><br>
           <span class="pop-meta">${esc(dayShortsFor(ev))} · ${esc(timeLabel(ev))}</span>
-          ${ev.ticketUrl ? `<br><a class="pop-link" href="${esc(ev.ticketUrl)}" target="_blank" rel="noopener">Tickets / info ↗</a>` : ''}
+          ${Links.hasUrl(ev.ticketUrl) ? `<br><a class="pop-link" href="${esc(ev.ticketUrl)}" target="_blank" rel="noopener">Tickets / info ↗</a>` : ''}
         </div>`).join('');
     return `<div class="pop-title">${esc(venueName)}</div>${rows}`;
   }
