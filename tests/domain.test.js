@@ -63,6 +63,10 @@ test('shared validation helpers centralize cleanup for text, lists, and publishe
   assert.deepEqual(Validation.cleanList(' Board Games,  Card Games / TCGs , '), ['Board Games', 'Card Games / TCGs']);
   assert.equal(Validation.cleanPublished(' Y ', Domain.norm), true);
   assert.equal(Validation.cleanPublished('n', Domain.norm), false);
+  assert.equal(Validation.cleanUrlText(' www.example.com/tickets '), 'https://www.example.com/tickets');
+  assert.equal(Validation.cleanUrlText('javascript:alert(1)'), '');
+  assert.equal(Links.cleanUrl('mailto:test@example.com'), '');
+  assert.equal(Links.hasUrl('data:text/html,hi'), false);
 });
 
 test('buildEvent falls back to tentative planning-grid entries when no specific date exists', () => {
@@ -164,4 +168,18 @@ test('shared day and schedule summaries support admin and map views', () => {
 
   assert.equal(Domain.dayShortsFor(ev, dayByIso), '18 OCT');
   assert.equal(Domain.scheduleSummary(ev, dayByIso), 'Tentative: 18 OCT (Morning)');
+});
+
+test('buildEvent drops unsafe URLs before any page renders them', () => {
+  const ev = buildEvent({
+    Organisation: 'Unsafe Links Inc',
+    'Stage of Planning': 'Announced / Live',
+    'Organisation URL': 'javascript:alert(1)',
+    'What URL should we direct people to? (more info, tickets)': 'data:text/html,hello',
+    'URL to Thumbnail': ' ftp://example.com/poster.png ',
+  });
+
+  assert.equal(ev.orgUrl, '');
+  assert.equal(ev.ticketUrl, '');
+  assert.equal(ev.thumbnail, '');
 });

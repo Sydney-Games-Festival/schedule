@@ -17,10 +17,23 @@
     return cleanText(value);
   }
 
-  // Intentionally keeps URL handling permissive for now; the link-safety bug is
-  // fixed separately after the shared validation boundary is in place.
   function cleanUrlText(value) {
-    return String(value == null ? '' : value).trim();
+    const raw = String(value == null ? '' : value).trim();
+    if (!raw) return '';
+
+    const candidate =
+      /^[a-z][a-z0-9+.-]*:/i.test(raw) ? raw :
+      /^[a-z0-9.-]+\.[a-z]{2,}(?:[/:?#]|$)/i.test(raw) || /^localhost(?:[/:?#]|$)/i.test(raw)
+        ? `https://${raw}`
+        : raw;
+
+    try {
+      const parsed = new URL(candidate);
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return '';
+      return parsed.href;
+    } catch (err) {
+      return '';
+    }
   }
 
   function cleanPublished(value, norm) {
