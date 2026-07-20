@@ -21,7 +21,7 @@
 
 ## Admin Follow-up
 
-- [ ] Fix all-day admin schedule bucketing so long confirmed events appear in every overlapping time slot.
-- [ ] Fix admin day-view time parsing so sheet-exported times render across the correct whole-day span.
+- [x] Fix all-day admin schedule bucketing so long confirmed events appear in every overlapping time slot.
+- [x] Fix admin day-view time parsing so sheet-exported times render across the correct whole-day span.
 - [ ] Fix admin list-view time formatting so confirmed events render readable day-local times instead of sheet epoch values.
 - [ ] Add a configurable admin-only live/sample data-source toggle that can be disabled to lock the page to the configured source.

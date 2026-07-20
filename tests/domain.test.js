@@ -69,6 +69,40 @@ test('shared validation helpers centralize cleanup for text, lists, and publishe
   assert.equal(Links.hasUrl('data:text/html,hi'), false);
 });
 
+test('parseTimeToMin extracts the actual time from spreadsheet-exported date-time values', () => {
+  assert.equal(Domain.parseTimeToMin('12/30/1899 9:00:00 AM'), 540);
+  assert.equal(Domain.parseTimeToMin('12/30/1899 10:00:00 PM'), 1320);
+  assert.equal(Domain.parseTimeToMin('1899-12-30T22:00:00.000Z'), 1320);
+  assert.equal(Domain.parseTimeToMin('0.375'), 540);
+});
+
+test('buildEvent uses parsed sheet-exported times for confirmed same-day events', () => {
+  const ev = buildEvent({
+    Organisation: 'All Day Example',
+    'Stage of Planning': 'Confirmed Planning',
+    'What is the specific date being planned?': 'Sat, Oct 17',
+    'What is the start time being planned?': '12/30/1899 9:00:00 AM',
+    'WIf known, what is the end time being planned?': '12/30/1899 10:00:00 PM',
+  });
+
+  assert.equal(ev.startMin, 540);
+  assert.equal(ev.endMin, 1320);
+});
+
+test('grid-scheduled events with explicit times are treated as timed day schedules', () => {
+  const ev = buildEvent({
+    Organisation: 'All Day Example',
+    'Stage of Planning': 'Early/Unconfirmed Planning',
+    'If still planning, what day/time are you planning for? [Sat, Oct 17]': 'Morning, Afternoon, Evening',
+    'What is the start time being planned?': '12/30/1899 9:00:00 AM',
+    'WIf known, what is the end time being planned?': '12/30/1899 10:00:00 PM',
+  });
+
+  assert.equal(Domain.hasTimedSchedule(ev), true);
+  assert.deepEqual([...Domain.bucketsForDay(ev, '2026-10-17')], ['AM', 'PM', 'EVE']);
+  assert.equal(Domain.eventTimeLabel(ev, { iso: '2026-10-17' }), '9:00 AM – 10:00 PM');
+});
+
 test('buildEvent falls back to tentative planning-grid entries when no specific date exists', () => {
   const ev = buildEvent({
     Organisation: 'Pixel Pushers Collective',

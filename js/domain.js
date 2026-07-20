@@ -42,12 +42,24 @@
 
   function parseTimeToMin(s) {
     if (!s) return null;
-    const m = String(s).trim().match(/(\d{1,2})(?::(\d{2}))?\s*(a\.?m\.?|p\.?m\.?)?/i);
+    const raw = String(s).trim();
+    if (!raw) return null;
+
+    const numeric = Number(raw);
+    if (!isNaN(numeric) && numeric >= 0 && numeric < 1) {
+      return Math.round(numeric * 24 * 60);
+    }
+
+    const timeMatches = [...raw.matchAll(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(a\.?m\.?|p\.?m\.?)?/ig)];
+    const meridiemOnlyMatches = timeMatches.length ? [] : [...raw.matchAll(/\b(\d{1,2})\s*(a\.?m\.?|p\.?m\.?)\b/ig)];
+    const m = timeMatches.length ? timeMatches[timeMatches.length - 1] : meridiemOnlyMatches[meridiemOnlyMatches.length - 1];
     if (!m) return null;
+
     let h = +m[1];
     const min = m[2] ? +m[2] : 0;
     if (h > 23 || min > 59) return null;
-    const ap = m[3] ? m[3].toLowerCase().replace(/\./g, '') : '';
+    const apIndex = timeMatches.length ? 4 : 2;
+    const ap = m[apIndex] ? m[apIndex].toLowerCase().replace(/\./g, '') : '';
     if (ap === 'pm' && h < 12) h += 12;
     if (ap === 'am' && h === 12) h = 0;
     return h * 60 + min;
@@ -321,6 +333,16 @@
     return opts.includeOutsideLabel && ev.outsideLabel ? ev.outsideLabel : '';
   }
 
+  function eventEndMin(ev) {
+    if (ev.endMin != null) return ev.endMin;
+    if (ev.startMin != null) return ev.startMin + 60;
+    return null;
+  }
+
+  function hasTimedSchedule(ev) {
+    return ev.startMin != null && ev.dayIsos.length > 0;
+  }
+
   function headerRange(evs) {
     const timed = evs.filter((e) => e.startMin != null);
     if (!timed.length) return '';
@@ -355,8 +377,14 @@
   function bucketsForDay(ev, iso) {
     const entry = getScheduleEntry(ev, iso);
     const out = new Set();
-    if (entry && !entry.tentative && ev.startMin != null) {
-      out.add(ev.startMin < 12 * 60 ? 'AM' : ev.startMin < 17 * 60 ? 'PM' : 'EVE');
+    if (entry && hasTimedSchedule(ev)) {
+      const start = ev.startMin;
+      const end = eventEndMin(ev);
+      if (start != null && end != null) {
+        if (start < 12 * 60 && end > 0) out.add('AM');
+        if (start < 17 * 60 && end > 12 * 60) out.add('PM');
+        if (end > 17 * 60) out.add('EVE');
+      }
     } else if (entry && entry.slot) {
       const s = entry.slot.toLowerCase();
       if (s.includes('morning')) out.add('AM');
@@ -397,9 +425,11 @@
     buildSchedule,
     bucketsForDay,
     dayShortsFor,
+    eventEndMin,
     eventTimeLabel,
     festivalBounds,
     getScheduleEntry,
+    hasTimedSchedule,
     headerIndex,
     headerRange,
     matchFestivalDate,

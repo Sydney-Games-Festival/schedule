@@ -50,9 +50,7 @@
     return `${h}:${String(min).padStart(2, '0')} ${ap}`;
   };
   function timeLabel(ev) {
-    if (ev.confirmedTiming && ev.startTime) return ev.endTime ? `${ev.startTime}–${ev.endTime}` : ev.startTime;
-    const slots = Domain.tentativeSlots(ev);
-    return slots.join(' · ');
+    return Domain.eventTimeLabel(ev) || Domain.tentativeSlots(ev).join(' · ');
   }
   const dayShortsFor = (ev) => Domain.dayShortsFor(ev, dayByIso);
 
@@ -74,9 +72,9 @@
     const entry = iso ? ev.schedule.find((e) => e.iso === iso) : null;
     const tentative = entry ? entry.tentative : !ev.confirmedTiming;
     let time = '';
-    if (entry && !entry.tentative && ev.timeText) time = ev.timeText;
+    if (entry && Domain.hasTimedSchedule(ev)) time = Domain.eventTimeLabel(ev, { iso });
     else if (entry && entry.slot) time = entry.slot;
-    else if (ev.timeText) time = ev.timeText;
+    else if (Domain.hasTimedSchedule(ev)) time = Domain.eventTimeLabel(ev);
     else time = timeLabel(ev);
     const dateLine = opts.showDate && ev.outsideLabel
       ? `<div class="ev-date">📅 ${esc(ev.outsideLabel)}</div>` : '';
@@ -177,8 +175,8 @@
     const iso = state.day;
     const d = dayByIso[iso];
     const dayEvents = list.filter((ev) => ev.dayIsos.includes(iso));
-    const timed = dayEvents.filter((ev) => ev.startMin != null && ev.confirmedTiming);
-    const untimed = dayEvents.filter((ev) => !(ev.startMin != null && ev.confirmedTiming));
+    const timed = dayEvents.filter((ev) => Domain.hasTimedSchedule(ev));
+    const untimed = dayEvents.filter((ev) => !Domain.hasTimedSchedule(ev));
 
     if (!timed.length) {
       $('#dayView').innerHTML = `
