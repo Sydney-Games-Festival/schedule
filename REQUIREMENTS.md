@@ -314,17 +314,15 @@ Admin's event drawer links directly to the source Sheet (`private/js/admin.js`
 details, which requires the admin's own Google account permissions on that
 Sheet — not something this app ever handles.
 
-### ⚠️ Remaining sheet-side cleanup (optional but recommended)
-The Sheet's "Publish to web" is still scoped to **"Entire document"**, which
-means the raw "Form Responses 1" tab (with contacts) is still technically
-reachable by URL for anyone who goes looking, even though the app itself never
-links to or fetches it any more. This is now a hygiene item, not an active
-leak: **File → Share → Publish to web → Stop publishing** (or narrow the scope
-to just "Sanitised Results") fully closes it. Wasn't done automatically because
-changing your document's live public-sharing settings needs your own hands on
-the confirmation dialog — an automated attempt to click through it hit a native
-browser confirm dialog that couldn't be reliably driven by tooling and was
-abandoned rather than risk an uncontrolled click.
+### ✅ Sheet-side privacy — resolved
+"Form Responses 1" (the contact-containing tab) is no longer published.
+Verified directly: its CSV export now returns **401 Unauthorized**, and
+Google's `/pubhtml` tab listing no longer mentions it at all — only "Sanitised
+Results" appears. The **Sanitised Results** tab (`EVENTS_CSV_URL`) remains
+published and reachable (`200 OK`), which is correct and required — it's the
+single data source every page on the site reads, including the admin pages.
+No code changes were needed; the app was already pointed at the sanitised tab
+exclusively (§1, §8 above).
 
 ---
 
@@ -345,16 +343,10 @@ abandoned rather than risk an uncontrolled click.
    `false` in `js/config.js` (commit + push) to switch every page from the
    sample dataset to live sheet data. The CSV is already live and correctly
    shaped — this is the only remaining switch.
-6. **Sheet hygiene (optional, see §8):** Publishing "Form Responses 1" and
-   "Sanitised Results" as two separate items (instead of "Entire document")
-   was tried — **verified it did not close the gap**: both tabs are still
-   readable via the exact same publish link, and Google's `/pubhtml` page
-   still lists both tab names and `gid`s in plaintext with a single
-   unauthenticated request (nothing requires guessing). The only fix that has
-   actually worked in testing is **File → Share → Publish to web → Stop
-   publishing**, fully, not a rescope. Not urgent — the app no longer fetches
-   or exposes the contact-containing tab either way — but worth doing to
-   close it off at the source.
+6. ~~Sheet hygiene~~ — **done**. "Form Responses 1" is fully unpublished
+   (verified: its CSV export now 401s, and `/pubhtml` no longer lists it).
+   "Sanitised Results" remains published and reachable, which is correct and
+   required — see §8.
 
 ## 10. Build order
 1. **Admin page first** — build, review against the full CSV, iterate until it
