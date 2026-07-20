@@ -3,7 +3,7 @@
 ## Architecture
 
 - [x] Extract shared domain helpers out of page controllers into reusable modules for scheduling, filters, and links.
-- [ ] Add lightweight automated tests for parsing, scheduling, visibility, and shared domain rules.
+- [x] Add lightweight automated tests for parsing, scheduling, visibility, and shared domain rules.
 - [ ] Add a shared validation/sanitization boundary for sheet-driven event data.
 
 ## Bug Fixes

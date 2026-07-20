@@ -1,0 +1,132 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+
+const Domain = require('../js/domain.js');
+const Filters = require('../js/filters.js');
+const Links = require('../js/links.js');
+
+const CFG = {
+  FESTIVAL_DAYS: [
+    { iso: '2026-10-12', dow: 'Mon', short: '12 OCT', label: 'Mon 12 Oct', gridKey: 'mon' },
+    { iso: '2026-10-13', dow: 'Tue', short: '13 OCT', label: 'Tue 13 Oct', gridKey: 'tue' },
+    { iso: '2026-10-14', dow: 'Wed', short: '14 OCT', label: 'Wed 14 Oct', gridKey: 'wed' },
+    { iso: '2026-10-15', dow: 'Thu', short: '15 OCT', label: 'Thu 15 Oct', gridKey: 'thu' },
+    { iso: '2026-10-16', dow: 'Fri', short: '16 OCT', label: 'Fri 16 Oct', gridKey: 'fri' },
+    { iso: '2026-10-17', dow: 'Sat', short: '17 OCT', label: 'Sat 17 Oct', gridKey: 'sat' },
+    { iso: '2026-10-18', dow: 'Sun', short: '18 OCT', label: 'Sun 18 Oct', gridKey: 'sun' },
+  ],
+  STATUSES: [
+    { key: 'ideation', label: 'Ideation', match: 'ideation' },
+    { key: 'early', label: 'Early / Unconfirmed', match: 'early' },
+    { key: 'confirmed', label: 'Confirmed Planning', match: 'confirmed' },
+    { key: 'live', label: 'Announced / Live', match: 'announced' },
+  ],
+};
+
+const dayByIso = Object.fromEntries(CFG.FESTIVAL_DAYS.map((d) => [d.iso, d]));
+
+function buildEvent(row) {
+  const hdrs = Domain.headerIndex(Object.keys(row));
+  return Domain.buildEvent(row, hdrs, CFG, { links: Links });
+}
+
+test('buildEvent normalizes confirmed events from sheet-like rows', () => {
+  const ev = buildEvent({
+    Organisation: 'Meeple Mates Sydney',
+    'Event Name': 'Open Table',
+    'Stage of Planning': 'Announced / Live (tickets ready)',
+    Published: 'Y',
+    'What type of games will be part of your event?': 'Board Games, Card Games / TCGs',
+    'What type of audience are you targeting?': 'General Public, Students',
+    'Where do you plan to host the event?': 'Sydney Town Hall',
+    'What is the specific date being planned?': 'Sat, Oct 18',
+    'What is the start time being planned?': '10:00 AM',
+    'WIf known, what is the end time being planned?': '6:00 PM',
+    'What URL should we direct people to? (more info, tickets)': ' https://example.com/tickets ',
+    'URL to Thumbnail': ' https://example.com/thumb.jpg ',
+  });
+
+  assert.equal(ev.title, 'Open Table');
+  assert.equal(ev.status.key, 'live');
+  assert.equal(ev.published, true);
+  assert.deepEqual(ev.dayIsos, ['2026-10-18']);
+  assert.equal(ev.startMin, 600);
+  assert.equal(ev.endMin, 1080);
+  assert.equal(ev.ticketUrl, 'https://example.com/tickets');
+  assert.equal(ev.thumbnail, 'https://example.com/thumb.jpg');
+});
+
+test('buildEvent falls back to tentative planning-grid entries when no specific date exists', () => {
+  const ev = buildEvent({
+    Organisation: 'Pixel Pushers Collective',
+    'Stage of Planning': 'Early/Unconfirmed Planning',
+    'If still planning, what day/time are you planning for? [Thurs, Oct 15]': 'Afternoon, Evening',
+    'If still planning, what day/time are you planning for? [Fri, Oct 16]': 'Morning',
+    'What type of audience are you targeting?': 'Experienced Makers, Other Industry Players',
+    'What type of games will be part of your event?': 'Arcade / Digital Game Cabinets',
+  });
+
+  assert.deepEqual(ev.dayIsos, ['2026-10-15', '2026-10-16']);
+  assert.equal(ev.confirmedTiming, false);
+  assert.deepEqual([...Domain.bucketsForDay(ev, '2026-10-15')], ['PM', 'EVE']);
+  assert.deepEqual([...Domain.bucketsForDay(ev, '2026-10-16')], ['AM']);
+});
+
+test('shared presentation helpers return consistent labels', () => {
+  const ev = buildEvent({
+    Organisation: 'Indie Launch Pad',
+    'Event Name': 'Opening Night',
+    'Stage of Planning': 'Announced / Live',
+    Published: 'Y',
+    'What is the specific date being planned?': 'Mon, Oct 12',
+    'What is the start time being planned?': '7:00 PM',
+    'WIf known, what is the end time being planned?': '11:00 PM',
+    'What type of audience are you targeting?': 'General Public, Experienced Makers',
+  });
+
+  assert.equal(Domain.eventTimeLabel(ev), '7:00 – 11:00 PM');
+  assert.equal(Domain.headerRange([ev]), '7 - 11 PM');
+  assert.equal(Domain.audienceBadge(ev), 'MAKERS');
+  assert.deepEqual([...Domain.audienceBuckets(ev)].sort(), ['makers', 'players']);
+});
+
+test('admin filters reuse shared logic for status, publication, membership, and search', () => {
+  const ev = buildEvent({
+    Organisation: 'Roll & Tell',
+    'Event Name': 'One-Shot Night',
+    'Stage of Planning': 'Confirmed Planning',
+    Published: 'N',
+    'What is the specific date being planned?': 'Wed, Oct 15',
+    'What type of audience are you targeting?': 'Beginner Players, Experienced Players',
+    'What type of games will be part of your event?': 'Tabletop RPGs',
+    'Tell us about your event': 'Friendly roleplaying sessions for first-timers.',
+    'Where do you plan to host the event?': 'Chatswood Library',
+  });
+
+  const filters = {
+    search: 'roleplaying',
+    statuses: new Set(['confirmed']),
+    audience: 'Beginner Players',
+    game: 'Tabletop RPGs',
+    day: '2026-10-15',
+    pub: 'n',
+  };
+
+  assert.equal(Filters.matchesAdminFilters(ev, filters), true);
+  assert.equal(
+    Filters.matchesAdminFilters(ev, Object.assign({}, filters, { search: 'megagame' })),
+    false
+  );
+});
+
+test('shared day and schedule summaries support admin and map views', () => {
+  const ev = buildEvent({
+    Organisation: 'Story Forge',
+    'Stage of Planning': 'Early/Unconfirmed Planning',
+    'If still planning, what day/time are you planning for? [Sun, Oct 18]': 'Morning',
+    'If still planning, what day/time are you planning for? [Other date]': 'Date still being decided with venue',
+  });
+
+  assert.equal(Domain.dayShortsFor(ev, dayByIso), '18 OCT');
+  assert.equal(Domain.scheduleSummary(ev, dayByIso), 'Tentative: 18 OCT (Morning)');
+});
