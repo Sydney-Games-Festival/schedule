@@ -27,3 +27,4 @@
 - [x] Add a configurable admin-only live/sample data-source toggle that can be disabled to lock the page to the configured source.
 - [x] Add a simple admin stats view with stage/type totals across festival days and overall total.
 - [x] Improve the admin stats view styling so key summaries stand out and tables are easier to scan.
+- [x] Refine the admin stats styling with corrected table alignment, clearer striping, and stronger KPI emphasis.

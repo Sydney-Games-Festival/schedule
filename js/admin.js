@@ -204,7 +204,7 @@
   }
 
   function statsTableHtml(title, subtitle, summary) {
-    const head = summary.columns.map((col) => `<th>${esc(col.label)}</th>`).join('');
+    const head = summary.columns.map((col) => `<th class="metric-head">${esc(col.label)}</th>`).join('');
     const body = summary.rows.length
       ? summary.rows.map((row) =>
         `<tr>
@@ -225,7 +225,7 @@
       </header>
       <div class="stats-table-wrap">
         <table class="stats-table">
-          <thead><tr><th>${esc(title)}</th>${head}<th class="total-col">Total</th></tr></thead>
+          <thead><tr><th>${esc(title)}</th>${head}<th class="metric-head total-col">Total</th></tr></thead>
           <tbody>${body}${totalRow}</tbody>
         </table>
       </div>
