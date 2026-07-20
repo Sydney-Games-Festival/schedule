@@ -73,7 +73,8 @@
   function footCell(ico, text) {
     return `<div class="cell"><span class="ico">${ico}</span>${esc(text || PLACEHOLDER)}</div>`;
   }
-  function cardHtml(ev) {
+  function cardHtml(ev, scopeKey) {
+    const scopeIso = dayByIso[scopeKey] ? scopeKey : '';
     const badge = Domain.audienceBadge(ev);
     const img = ev.thumbnail
       ? `<img src="${esc(ev.thumbnail)}" alt="${esc(ev.title)}" onerror="this.onerror=null;this.src='images/placeholder.svg'">`
@@ -84,7 +85,7 @@
     const gameType = ev.gameTypes[0] ? ev.gameTypes[0].toUpperCase() : '';
     return `<article class="pcard">
       <div class="pcard-top">
-        <span class="pcard-time">${esc(Domain.eventTimeLabel(ev)) || PLACEHOLDER}</span>
+        <span class="pcard-time">${esc(Domain.eventTimeLabel(ev, { iso: scopeIso })) || PLACEHOLDER}</span>
         <span class="spacer"></span>
         ${badge ? `<span class="badge-makers">★ ${esc(badge)}</span>` : ''}
         ${tickets}
@@ -118,7 +119,7 @@
     const scope = state.scopes.find((s) => s.key === state.selected);
     $('#dayTitle').textContent = scope ? scope.short : '';
     $('#timeRange').textContent = Domain.headerRange(evs);
-    $('#cards').innerHTML = evs.length ? evs.map(cardHtml).join('') : emptyStateHtml(dayEvs.length > 0);
+    $('#cards').innerHTML = evs.length ? evs.map((ev) => cardHtml(ev, state.selected)).join('') : emptyStateHtml(dayEvs.length > 0);
   }
 
   function emptyStateHtml(hasAnyForDay) {

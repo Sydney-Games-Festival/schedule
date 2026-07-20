@@ -129,6 +129,19 @@ test('shared presentation helpers return consistent labels', () => {
   assert.deepEqual([...Domain.audienceBuckets(ev)].sort(), ['makers', 'players']);
 });
 
+test('eventTimeLabel can scope tentative labels to a single selected festival day', () => {
+  const ev = buildEvent({
+    Organisation: 'Pixel Pushers Collective',
+    'Stage of Planning': 'Early/Unconfirmed Planning',
+    'If still planning, what day/time are you planning for? [Thurs, Oct 15]': 'Afternoon, Evening',
+    'If still planning, what day/time are you planning for? [Fri, Oct 16]': 'Morning',
+  });
+
+  assert.equal(Domain.eventTimeLabel(ev), 'Afternoon, Evening · Morning');
+  assert.equal(Domain.eventTimeLabel(ev, { iso: '2026-10-15' }), 'Afternoon, Evening');
+  assert.equal(Domain.eventTimeLabel(ev, { iso: '2026-10-16' }), 'Morning');
+});
+
 test('admin filters reuse shared logic for status, publication, membership, and search', () => {
   const ev = buildEvent({
     Organisation: 'Roll & Tell',

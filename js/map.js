@@ -33,7 +33,8 @@
   }
 
   function timeLabel(ev) {
-    return Domain.eventTimeLabel(ev, { includeOutsideLabel: true }) || '—';
+    const scopeIso = dayByIso[state.filters.day] ? state.filters.day : '';
+    return Domain.eventTimeLabel(ev, { iso: scopeIso, includeOutsideLabel: true }) || '—';
   }
   const dayShortsFor = (ev) => Domain.dayShortsFor(ev, dayByIso, { includeOutsideLabel: true }) || 'TBD';
 

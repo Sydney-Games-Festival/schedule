@@ -26,7 +26,8 @@
   }
 
   function timeLabel(ev) {
-    return Domain.eventTimeLabel(ev) || '—';
+    const scopeIso = dayByIso[state.day] ? state.day : '';
+    return Domain.eventTimeLabel(ev, { iso: scopeIso }) || '—';
   }
   const dayShortsFor = (ev) => Domain.dayShortsFor(ev, dayByIso) || 'TBD';
 
