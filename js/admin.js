@@ -208,15 +208,15 @@
     const body = summary.rows.length
       ? summary.rows.map((row) =>
         `<tr>
-          <td>${esc(row.label)}</td>
+          <th scope="row">${esc(row.label)}</th>
           ${summary.columns.map((col) => `<td>${row.counts[col.key]}</td>`).join('')}
-          <td>${row.total}</td>
+          <td class="total-col">${row.total}</td>
         </tr>`).join('')
-      : `<tr><td>No matching rows</td>${summary.columns.map(() => '<td>0</td>').join('')}<td>0</td></tr>`;
+      : `<tr><th scope="row">No matching rows</th>${summary.columns.map(() => '<td>0</td>').join('')}<td class="total-col">0</td></tr>`;
     const totalRow = `<tr class="total-row">
-      <td>Total</td>
+      <th scope="row">Total</th>
       ${summary.columns.map((col) => `<td>${summary.totals.counts[col.key]}</td>`).join('')}
-      <td>${summary.totals.total}</td>
+      <td class="total-col">${summary.totals.total}</td>
     </tr>`;
     return `<section class="stats-block">
       <header class="stats-head">
@@ -225,11 +225,19 @@
       </header>
       <div class="stats-table-wrap">
         <table class="stats-table">
-          <thead><tr><th>${esc(title)}</th>${head}<th>Total</th></tr></thead>
+          <thead><tr><th>${esc(title)}</th>${head}<th class="total-col">Total</th></tr></thead>
           <tbody>${body}${totalRow}</tbody>
         </table>
       </div>
     </section>`;
+  }
+
+  function statsKpiHtml(label, value, detail, tone) {
+    return `<article class="stats-kpi ${tone}">
+      <div class="kicker">${esc(label)}</div>
+      <div class="value">${value}</div>
+      <div class="detail">${esc(detail)}</div>
+    </article>`;
   }
 
   function renderStats(list) {
@@ -244,12 +252,14 @@
     const published = list.filter((ev) => ev.published).length;
     const timed = list.filter((ev) => Domain.hasTimedSchedule(ev)).length;
     const otherBucket = list.filter((ev) => !ev.dayIsos.length).length;
+    const publishedShare = list.length ? Math.round((published / list.length) * 100) : 0;
+    const timedPending = Math.max(list.length - timed, 0);
     $('#statsView').innerHTML = `
       <div class="stats-overview">
-        <div class="stats-kpi"><div class="kicker">Filtered events</div><div class="value">${list.length}</div></div>
-        <div class="stats-kpi"><div class="kicker">Published</div><div class="value">${published}</div></div>
-        <div class="stats-kpi"><div class="kicker">Timed</div><div class="value">${timed}</div></div>
-        <div class="stats-kpi"><div class="kicker">Other / no day</div><div class="value">${otherBucket}</div></div>
+        ${statsKpiHtml('Filtered events', list.length, 'Current result set across all active filters.', 'primary')}
+        ${statsKpiHtml('Published', published, `${publishedShare}% marked for the public schedule.`, 'success')}
+        ${statsKpiHtml('Timed', timed, timedPending ? `${timedPending} still tentative or untimed.` : 'All filtered events have confirmed times.', 'info')}
+        ${statsKpiHtml('Other / no day', otherBucket, 'Outside festival days or still date TBD.', 'muted')}
       </div>
       ${statsTableHtml('Stage', 'Counts by current filtered event set.', stageSummary)}
       ${statsTableHtml('Game type', 'Events can appear in more than one game-type row.', typeSummary)}

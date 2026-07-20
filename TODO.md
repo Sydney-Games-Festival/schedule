@@ -26,3 +26,4 @@
 - [x] Fix admin list-view time formatting so confirmed events render readable day-local times instead of sheet epoch values.
 - [x] Add a configurable admin-only live/sample data-source toggle that can be disabled to lock the page to the configured source.
 - [x] Add a simple admin stats view with stage/type totals across festival days and overall total.
+- [x] Improve the admin stats view styling so key summaries stand out and tables are easier to scan.

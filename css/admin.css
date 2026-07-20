@@ -236,12 +236,24 @@ table.list tr:hover td { background: var(--blue-tint-2); cursor: pointer; }
 
 /* Stats view */
 .stats-view { display: flex; flex-direction: column; gap: 18px; }
-.stats-overview { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.stats-overview { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
 .stats-kpi {
+  --kpi-accent: var(--blue);
+  position: relative;
   background: var(--card);
-  border: 1px solid var(--line);
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--kpi-accent) 9%, var(--card)) 0%, var(--card) 100%);
+  border: 1px solid color-mix(in srgb, var(--kpi-accent) 20%, var(--line));
   border-radius: var(--radius);
-  padding: 12px 14px;
+  padding: 16px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.stats-kpi::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: linear-gradient(90deg, var(--kpi-accent), color-mix(in srgb, var(--kpi-accent) 35%, #ffffff));
 }
 .stats-kpi .kicker {
   font-size: 11px;
@@ -252,21 +264,45 @@ table.list tr:hover td { background: var(--blue-tint-2); cursor: pointer; }
 }
 .stats-kpi .value {
   font-family: var(--font-head);
-  color: var(--blue);
-  font-size: 22px;
+  color: var(--kpi-accent);
+  font-size: 30px;
   line-height: 1.1;
-  margin-top: 4px;
+  margin-top: 10px;
+}
+.stats-kpi .detail {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.stats-kpi.primary {
+  --kpi-accent: var(--blue-dark);
+  grid-column: span 2;
+  padding-bottom: 18px;
+}
+.stats-kpi.primary .value {
+  font-size: 38px;
+}
+.stats-kpi.success {
+  --kpi-accent: var(--status-confirmed);
+}
+.stats-kpi.info {
+  --kpi-accent: var(--status-live);
+}
+.stats-kpi.muted {
+  --kpi-accent: #7c8798;
 }
 .stats-block {
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   overflow: hidden;
+  box-shadow: var(--shadow);
 }
 .stats-head {
-  padding: 12px 14px;
+  padding: 14px 16px;
   border-bottom: 1px solid var(--line);
-  background: var(--blue-tint);
+  background: linear-gradient(180deg, var(--blue-tint) 0%, var(--blue-tint-2) 100%);
 }
 .stats-head h3 {
   margin: 0;
@@ -284,16 +320,17 @@ table.stats-table {
   border-collapse: collapse;
   width: 100%;
   font-size: 13px;
+  min-width: 620px;
 }
 table.stats-table th,
 table.stats-table td {
-  padding: 9px 12px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--line);
-  text-align: right;
+  text-align: center;
   white-space: nowrap;
 }
-table.stats-table th:first-child,
-table.stats-table td:first-child {
+table.stats-table thead th:first-child,
+table.stats-table tbody th {
   text-align: left;
   position: sticky;
   left: 0;
@@ -304,19 +341,47 @@ table.stats-table thead th {
   font-weight: 400;
   color: var(--blue-dark);
   background: var(--blue-tint);
+  font-size: 11px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
 }
 table.stats-table thead th:first-child {
   background: var(--blue-tint);
 }
+table.stats-table tbody th {
+  font-weight: 700;
+  color: var(--ink);
+}
+table.stats-table tbody tr:nth-child(odd) th,
+table.stats-table tbody tr:nth-child(odd) td {
+  background: color-mix(in srgb, var(--blue-tint-2) 82%, var(--card));
+}
+table.stats-table tbody tr:hover th,
+table.stats-table tbody tr:hover td {
+  background: color-mix(in srgb, var(--blue-tint) 70%, var(--card));
+}
+table.stats-table .total-col {
+  font-weight: 700;
+  background: color-mix(in srgb, var(--blue-tint) 55%, var(--card));
+}
+table.stats-table tbody tr:hover .total-col {
+  background: color-mix(in srgb, var(--blue-tint) 82%, var(--card));
+}
 table.stats-table tbody tr:last-child td {
+  border-bottom: none;
+}
+table.stats-table tbody tr:last-child th {
   border-bottom: none;
 }
 table.stats-table tbody tr.total-row td {
   font-weight: 700;
   background: var(--blue-tint-2);
 }
-table.stats-table tbody tr.total-row td:first-child {
+table.stats-table tbody tr.total-row th {
   background: var(--blue-tint-2);
+}
+table.stats-table tbody tr.total-row .total-col {
+  background: color-mix(in srgb, var(--blue-tint) 75%, var(--card));
 }
 table.list td .ev-title { font-weight: 700; }
 
@@ -354,4 +419,5 @@ table.list td .ev-title { font-weight: 700; }
 @media (max-width: 640px) {
   .filters { top: 0; position: static; }
   .field input[type=search] { min-width: 160px; }
+  .stats-kpi.primary { grid-column: span 1; }
 }
