@@ -241,18 +241,22 @@ CSV so every status is visible.
 ---
 
 ## 9. Open items owned by you
-1. **Rename "Column 33" → `Published`** in the full tab and set Y/N per event.
-2. **Populate the "Sanitised Results" tab** with a formula that mirrors the form
-   responses **excluding** contact columns (Name, Email Address, Mobile number,
-   Discord handle, Alternate Contact Method) but **including** `Stage of Planning`,
-   the day/time grid, timing, game/audience types, `Marketing Blurb`, ticket URL,
-   `Event Name`, `URL to Thumbnail`, and `Published`. A single spilled formula in
-   the tab's A1 works, e.g. selecting the wanted columns from `'Form Responses 1'`.
-   The public page reads gid `171864363`.
+1. ~~Rename "Column 33" → `Published`~~ — **done**, moved to column B. Set Y/N
+   per event as submissions come in.
+2. ~~Populate the "Sanitised Results" tab~~ — **done**. A1 holds:
+   `=QUERY('Form Responses 1'!A:AI, "select A,B,C,E,F,G,H,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,AA,AB,AC,AD,AE,AF,AG,AH,AI", 1)`
+   — every column except Name/Email Address/Mobile number/Discord handle/
+   Alternate Contact Method (verified live via the published CSV: 30 columns,
+   zero contact fields). If the form's columns are ever reordered or renamed,
+   this formula's column letters need updating to match.
 3. **Map page:** optionally add a `Venue Lat/Lng` column to override geocoding for
    any venues Nominatim gets wrong (hybrid approach — see §5). Not required to
    start; geocoding runs without it.
 4. Provide/confirm the SGF logo and any real event thumbnails/URLs.
+5. **When real event submissions start arriving**, flip `USE_SAMPLE_DATA` to
+   `false` in `js/config.js` (commit + push) to switch all three pages from the
+   sample dataset to live sheet data. Both CSVs are already live and correctly
+   shaped — this is the only remaining switch.
 
 ## 10. Build order
 1. **Admin page first** — build, review against the full CSV, iterate until it
