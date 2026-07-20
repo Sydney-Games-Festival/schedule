@@ -2,6 +2,10 @@
  * Views: Day (single day, grouped AM/PM/EVE) · Calendar (time × venue grid) · List (sortable). */
 (function () {
   const CFG = window.SGF_CONFIG;
+  // Organiser contact details (Name/Email/Mobile/Discord/Alt Contact) are
+  // excluded from every published CSV for privacy — look them up directly in
+  // the source sheet instead of the app ever fetching/displaying them.
+  const SHEET_EDIT_URL = 'https://docs.google.com/spreadsheets/d/1U8jFpmMSGMHrqNflQdCX3hxUbj0xtO4u9xYxRE7H8Pw/edit';
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const esc = (s) =>
@@ -298,7 +302,7 @@
       <td>${statusBadge(ev)}</td>
       <td><span class="pub-dot ${ev.published ? 'y' : 'n'}">${ev.published ? 'Y' : 'N'}</span></td>
       <td><span class="ev-title">${esc(ev.title)}</span></td>
-      <td>${esc(ev.organiser || '')}<br><small style="color:var(--muted)">${esc(ev.organisation || '')}</small></td>
+      <td>${esc(ev.organisation || ev.organiser || '')}</td>
       <td>${esc(dayShortsFor(ev) || (ev.otherDate ? 'Other' : '—'))}${ev.confirmedTiming ? '' : ' <span class="tentative-flag">tent</span>'}</td>
       <td>${esc(timeLabel(ev) || '—')}</td>
       <td>${esc(ev.audiences.join(', '))}</td>
@@ -325,10 +329,6 @@
   const drow = (dt, dd) => (dd ? `<dt>${esc(dt)}</dt><dd>${dd}</dd>` : '');
   const dlink = (url) => (url ? `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a>` : '');
   function openDrawer(ev) {
-    const contacts = [
-      drow('Email', ev.email ? `<a href="mailto:${esc(ev.email)}">${esc(ev.email)}</a>` : ''),
-      drow('Mobile', esc(ev.mobile)), drow('Discord', esc(ev.discord)), drow('Alt contact', esc(ev.altContact)),
-    ].join('');
     $('#drawer').innerHTML = `
       <header><h2>${esc(ev.title)}</h2><button class="close" aria-label="Close">×</button></header>
       <div class="body">
@@ -339,15 +339,19 @@
         ${ev.description ? `<section><h3>About</h3><p class="desc">${esc(ev.description)}</p></section>` : ''}
         ${ev.blurb ? `<section><h3>Marketing blurb</h3><p class="desc">${esc(ev.blurb)}</p></section>` : ''}
         <section><h3>Details</h3><dl>
-          ${drow('Organiser', esc(ev.organiser))}${drow('Organisation', esc(ev.organisation))}
+          ${drow('Organisation', esc(ev.organisation))}
           ${drow('Role', esc(ev.role))}${drow('Org URL', dlink(ev.orgUrl))}${drow('Reach', esc(ev.reach))}
           ${drow('Co-organisers', esc(ev.coOrganisers))}${drow('Game types', esc(ev.gameTypes.join(', ')))}
           ${drow('Audience', esc(ev.audiences.join(', ')))}${drow('Duration', esc(ev.duration))}
           ${drow('Location', esc(ev.location))}${drow('Est. attendance', esc(ev.attendance))}
           ${drow('Max capacity', esc(ev.capacity))}${drow('Tickets / info', dlink(ev.ticketUrl))}
           ${drow('Thumbnail URL', dlink(ev.thumbnail))}
+          ${drow('Submitted', esc(ev.timestamp))}
         </dl></section>
-        <section><h3>Contact (admin only)</h3><div class="contacts"><dl>${contacts || '<dd>None provided</dd>'}</dl></div></section>
+        <section><h3>Contact details</h3>
+          <p class="desc">${esc("Organiser name, email, phone, and Discord aren't published to this app for privacy. Look them up in the source sheet — use the organisation and submitted-time above to find the right row.")}</p>
+          <a class="chip-btn" href="${esc(SHEET_EDIT_URL)}" target="_blank" rel="noopener">Open in Google Sheet ↗</a>
+        </section>
       </div>`;
     $('#drawer .close').addEventListener('click', closeDrawer);
     $('#drawer').classList.add('open');

@@ -1,14 +1,16 @@
-/* SGF Schedule — SHARED configuration, loaded by every page (admin, public,
- * map). Anything in here is downloaded by every visitor to the public site —
- * do not add the admin (contact-containing) CSV link here. It lives in
- * js/config.admin.js, which only admin.html and map.html load.
+/* SGF Schedule — shared configuration, loaded by every page (admin, public, map).
+ * There is a single event data source for the whole site: the "Sanitised
+ * Results" sheet tab, which already excludes the five contact columns (Name,
+ * Email Address, Mobile number, Discord handle, Alternate Contact Method) at
+ * the spreadsheet level — see REQUIREMENTS.md §9 for why. Admins who need an
+ * organiser's contact details open the source Google Sheet directly (linked
+ * from the admin event drawer) rather than the app fetching that data.
  * Flip USE_SAMPLE_DATA to false once real submissions exist in the sheet.
  * Even when false, a live tab that returns zero events auto-falls back to sample. */
 window.SGF_CONFIG = {
   USE_SAMPLE_DATA: true,
 
-  // Sanitised "Sanitised Results" tab (no contacts) — used by the PUBLIC page.
-  PUBLIC_CSV_URL:
+  EVENTS_CSV_URL:
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ_QICyyTV2CLhcoyQOO_v3HshLMA2MQBGU-dIjFxMLDImYkPN1pCvswFjGinOqqOHAVlLNyGblw6KN/pub?gid=171864363&single=true&output=csv',
 
   SAMPLE_CSV_URL: 'data/sample-events.csv',

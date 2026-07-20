@@ -6,6 +6,11 @@
  */
 (function () {
   const CFG = window.SGF_CONFIG;
+  // Resolve site-relative paths (e.g. SAMPLE_CSV_URL) against the actual
+  // location of THIS script, not the page — pages at different depths
+  // (root vs private/) load data.js via different relative paths, but the
+  // browser always resolves them to the same final script URL.
+  const SITE_ROOT = new URL('..', document.currentScript.src).href;
 
   const norm = (s) =>
     String(s == null ? '' : s).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
@@ -192,7 +197,11 @@
       published: /^y/.test(norm(publishedRaw)),
       publishedRaw,
 
-      // contacts (admin only)
+      // Contact fields (Name/Email/Mobile/Discord/Alt Contact) are intentionally
+      // excluded from the published sheet, so these are always empty in
+      // practice — kept here so the app still behaves if that ever changes.
+      // Admin looks up contacts directly in the source Google Sheet instead
+      // (see SHEET_EDIT_URL in js/admin.js).
       email: pick(row, hdrs, 'email'),
       mobile: pick(row, hdrs, 'mobile'),
       discord: pick(row, hdrs, 'discord'),
@@ -250,8 +259,12 @@
     });
   }
 
+  // `source` is accepted for readability at call sites (loadEvents('admin') /
+  // loadEvents('public')) but every page reads the SAME sheet now — there is
+  // no separate contact-containing CSV any more. See CFG.EVENTS_CSV_URL.
   async function loadEvents(source) {
-    const liveUrl = source === 'public' ? CFG.PUBLIC_CSV_URL : CFG.ADMIN_CSV_URL;
+    const liveUrl = CFG.EVENTS_CSV_URL;
+    const sampleUrl = new URL(CFG.SAMPLE_CSV_URL, SITE_ROOT).href;
 
     async function parseUrl(url) {
       const bust = (url.includes('?') ? '&' : '?') + '_=' + Date.now();
@@ -269,17 +282,17 @@
     let result;
     if (CFG.USE_SAMPLE_DATA) {
       usedSample = true;
-      result = await parseUrl(CFG.SAMPLE_CSV_URL);
+      result = await parseUrl(sampleUrl);
     } else {
       try {
         result = await parseUrl(liveUrl);
         if (!result.events.length) {
           usedSample = true;
-          result = await parseUrl(CFG.SAMPLE_CSV_URL);
+          result = await parseUrl(sampleUrl);
         }
       } catch (e) {
         usedSample = true;
-        result = await parseUrl(CFG.SAMPLE_CSV_URL);
+        result = await parseUrl(sampleUrl);
       }
     }
     return { events: result.events, fields: result.fields, usedSample };

@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex, nofollow" />
   <title>SGF Schedule — Admin</title>
-  <link rel="icon" href="images/favicon.svg" />
+  <link rel="icon" href="../images/favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Special+Gothic+Expanded+One&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/base.css?v=1" />
-  <link rel="stylesheet" href="css/admin.css?v=1" />
+  <link rel="stylesheet" href="../css/base.css?v=1" />
+  <link rel="stylesheet" href="../css/admin.css?v=1" />
 </head>
 <body>
   <header class="topbar">
@@ -26,7 +26,8 @@
       <button id="viewList" class="chip-btn">List</button>
       <button id="refreshBtn" class="chip-btn" title="Reload data">↻ Refresh</button>
       <a class="chip-btn" href="map.html">Map</a>
-      <a class="chip-btn" href="index.html">Public site →</a>
+      <a class="chip-btn" href="../map.html">Public map</a>
+      <a class="chip-btn" href="../index.html">Public site →</a>
       <button id="themeBtn" class="chip-btn" title="Toggle theme">◐ Theme</button>
     </div>
   </header>
@@ -76,7 +77,7 @@
           <th data-sort="status">Status</th>
           <th data-sort="pub">Pub</th>
           <th data-sort="title">Event</th>
-          <th data-sort="organiser">Organiser</th>
+          <th data-sort="organiser">Organisation</th>
           <th data-sort="day">Day(s)</th>
           <th data-sort="time">Time</th>
           <th data-sort="audience">Audience</th>
@@ -93,9 +94,8 @@
   <aside id="drawer" class="drawer" aria-hidden="true"></aside>
 
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <script src="js/config.js?v=2"></script>
-  <script src="js/config.admin.js?v=1"></script>
-  <script src="js/data.js?v=1"></script>
-  <script src="js/admin.js?v=1"></script>
+  <script src="../js/config.js?v=3"></script>
+  <script src="../js/data.js?v=2"></script>
+  <script src="../js/admin.js?v=3"></script>
 </body>
 </html>

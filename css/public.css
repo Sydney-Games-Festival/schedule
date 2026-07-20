@@ -101,12 +101,14 @@ body::before {
 .btn-notify:hover { background: var(--orange-deep); }
 .loading-public { text-align: center; color: var(--orange-deep); padding: 80px 20px; }
 
-/* Brand badge (bottom-left) */
+/* Brand badge (bottom-left) + venue map link (bottom-right) */
 .brand-badge { position: fixed; left: 16px; bottom: 16px; z-index: 25;
   display: inline-flex; align-items: center; gap: 8px; background: #2a2a33; color: #fff;
   font-family: var(--font-display); font-weight: 600; font-size: 14px; padding: 8px 14px; border-radius: 10px;
-  box-shadow: 0 6px 18px rgba(0,0,0,.18); }
+  box-shadow: 0 6px 18px rgba(0,0,0,.18); text-decoration: none; }
 .brand-badge .dot { color: var(--orange); }
+.map-badge { left: auto; right: 16px; background: var(--orange); }
+.map-badge:hover { background: var(--orange-deep); }
 
 /* Mobile day picker — hidden on desktop/tablet, shown in place of the rail
    below the phone breakpoint (see the 600px query). */

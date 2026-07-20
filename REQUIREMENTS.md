@@ -1,37 +1,44 @@
 # SGF Schedule — Requirements & Plan
 
-Sydney Games Festival (SGF) event schedule site. Two static pages driven by the
+Sydney Games Festival (SGF) event schedule site. Five static pages driven by the
 event-registration Google Form responses, hosted free on GitHub Pages.
 
 - **Festival dates:** Mon 12 Oct – Sun 18 Oct 2026 (7 days).
 - **Repo / Pages name:** `sgf-schedule`.
 - **Stack:** Static HTML + CSS + vanilla JS. CSV parsed client-side with
   [PapaParse](https://www.papaparse.com/) (CDN). No backend, no build step.
+- **Pages:** public schedule (`index.html`) and public venue map (`map.html`)
+  at the site root; admin schedule (`private/admin.html`) and admin venue map
+  (`private/map.html`) under `private/` — see §8 for why "private" means
+  unlisted, not access-controlled.
 
 ---
 
 ## 1. Data sources
 
 Events come from the Google Form → Sheet → published CSV pipeline. For local
-testing, a bundled `data/sample-events.csv` (8 events across all statuses) stands
-in until real submissions arrive; `js/config.js` toggles sample vs live and
-auto-falls-back to sample when a live tab is empty.
+testing, a bundled `data/sample-events.csv` (12 events across all statuses)
+stands in until real submissions arrive; `js/config.js` toggles sample vs live
+and auto-falls-back to sample when the live tab is empty.
 
 - **Form:** https://forms.gle/XAnQujoudWXonksa8
 - **Sheet:** https://docs.google.com/spreadsheets/d/1U8jFpmMSGMHrqNflQdCX3hxUbj0xtO4u9xYxRE7H8Pw/edit
-- **Admin CSV (full, tab "Form Responses 1"):**
-  `https://docs.google.com/spreadsheets/d/e/2PACX-1vQ_QICyyTV2CLhcoyQOO_v3HshLMA2MQBGU-dIjFxMLDImYkPN1pCvswFjGinOqqOHAVlLNyGblw6KN/pub?output=csv`
-- **Public CSV (sanitised tab "Sanitised Results", gid `171864363`):**
-  `…/pub?gid=171864363&single=true&output=csv`
-  (whole document is published, so tabs are selected by `gid`). This tab is
-  currently **empty** — it needs to be populated with a formula that mirrors the
-  form responses minus contact columns (see §7). Until then the public page falls
-  back to bundled sample data.
-- Admin tab "Form Responses 1" has gid `1037089166`; the default `?output=csv`
-  (no gid) also returns it.
+- **The one and only CSV every page reads — `EVENTS_CSV_URL` in `js/config.js`:**
+  the **"Sanitised Results" tab** (gid `171864363`),
+  `…/pub?gid=171864363&single=true&output=csv`. It already excludes the five
+  contact columns (Name, Email Address, Mobile number, Discord handle,
+  Alternate Contact Method) via a `QUERY` formula in its A1 — see §9 item 2 —
+  but includes every other field (status, published, schedule, venue, game
+  types, audience, blurb, ticket URL, event name, thumbnail). **There is no
+  separate "admin" CSV any more** — see §8 for why.
+- Admin's "Form Responses 1" tab (gid `1037089166`) is the raw form output with
+  contacts. The app never fetches it. Admins who need an organiser's contact
+  details open this tab directly in the Sheet (linked from the admin event
+  drawer) rather than the site ever displaying it.
 
-Both pages fetch their CSV live at page load, so publishing a new sheet row (or
-flipping an event's **Published** flag / status) updates the site with no code change.
+All pages fetch the CSV live at page load, so publishing a new sheet row (or
+flipping an event's **Published** flag / status) updates every page with no
+code change.
 
 ### Publish gate (`Published` column)
 - A **`Published`** column (Y/N) controls the public page: an event renders on
@@ -94,15 +101,19 @@ An event is placed on the festival calendar using this precedence:
 
 ---
 
-## 3. Page 1 — Admin (`admin.html`)
+## 3. Page 1 — Admin (`private/admin.html`)
 
-Functional, information-dense. Reads the **full** CSV. Audience: organisers.
+Functional, information-dense. Audience: organisers.
 
 **Look:** clean white + blue, using the Google Form's fonts — **Space Grotesk**
 (body) and **Special Gothic Expanded One** (headings), both from Google Fonts.
 
-**Shows:** all events, every status and audience type, including contact details
-(admin uses the full CSV; contacts are kept out of the public sanitised tab).
+**Shows:** all events, every status and audience type. **No contact details**
+(Name/Email/Mobile/Discord/Alt Contact) are fetched or displayed anywhere in
+the app — the event detail drawer's "Contact details" section instead links
+directly to the source Google Sheet (`SHEET_EDIT_URL` in `js/admin.js`), where
+an admin with their own sheet access can look up the organiser using the
+Organisation name and submitted-timestamp shown in the drawer.
 
 **Three views** (chosen from the top bar; a sticky day-strip Mon 12 → Sun 18,
 flush under the top bar, drives the single-day views):
@@ -141,20 +152,22 @@ flush under the top bar, drives the single-day views):
 **Filters (apply across all views):** free-text search, Stage of Planning
 (colour-coded status toggles), audience type, game type, day, and Published Y/N.
 
-**Per-event detail drawer:** title, organiser + role + org, all contacts
-(email/mobile/Discord/alt), co-organisers, description, blurb, game types,
-audience, duration, location, attendance, max capacity, ticket URL, thumbnail,
-and a plain-language schedule summary (confirmed vs tentative).
+**Per-event detail drawer:** title, organisation + role, org URL, reach,
+co-organisers, description, blurb, game types, audience, duration, location,
+attendance, max capacity, ticket URL, thumbnail, submitted timestamp, a
+plain-language schedule summary (confirmed vs tentative), and the "open in
+Google Sheet" contact link described above.
 
 **Also:** data-source pill (sample vs live), manual refresh, dark/light theme
 toggle (persisted).
 
 ---
 
-## 4. Page 2 — Public (`index.html`)
+## 4. Page 2 — Public schedule (`index.html`)
 
-Matches the supplied screenshot. Reads the **sanitised** CSV and shows **only
-`Announced / Live`** events. No contact details ever rendered.
+Matches the supplied screenshot. Shows only events with **`Published` = Y**.
+No contact details ever rendered (see §1 — the CSV itself never contains them).
+A small orange "🗺️ Venue map" badge (bottom-right) links to `map.html` (§6).
 
 **Design (from screenshot) — built.** Fonts: **Fredoka** (display) + **Space
 Grotesk** (body).
@@ -185,11 +198,10 @@ Grotesk** (body).
 
 ---
 
-## 5. Page 3 — Map (`map.html`) — built
+## 5. Page 3 — Admin venue map (`private/map.html`) — built
 
 An interactive map of event **venues**, with each marker listing the event(s)
-held there. Admin/planning aid (linked from the admin top bar); reads the full
-CSV so every status is visible.
+held there. Admin/planning aid (linked from the admin top bar).
 
 - **Tech:** [Leaflet](https://leafletjs.com/) (via CDN) with OpenStreetMap tiles
   — free and GitHub-Pages friendly.
@@ -216,52 +228,93 @@ CSV so every status is visible.
   resolved via manual override (proving the override takes priority), 4 too vague
   to geocode ("TBC", "(tentative)", etc.) correctly land in Unmapped.
 
+---
+
+## 6. Page 4 — Public venue map (`map.html`) — built
+
+A duplicate of the admin map, stripped down for public consumption: **no
+planning-stage or publish-status filters** — it only ever shows events with
+`Published` = Y (same rule as the public schedule), and **defaults to every
+venue across the whole festival** with a single **Day** dropdown to narrow to
+one date. Linked from the public schedule's "🗺️ Venue map" badge and links
+back to it.
+
+- Same hybrid geocoding as the admin map (`js/geocode.js` is shared, unchanged).
+- Recoloured to the public peach/orange theme (`css/map-public.css`, Fredoka +
+  Space Grotesk) rather than the admin blue/white.
+- Marker popups drop the status badge (not meaningful once everything shown is
+  published) and add a **Tickets / info** link when the event has one.
+- Logic lives in `js/map-public.js` (separate from the admin map's `js/map.js`
+  since the filtering/data rules genuinely differ, not just styling).
+
+---
+
 ## 7. Shared implementation
 
 - `js/data.js` — fetch + PapaParse + column mapping + normalise each row into a
-  clean `Event` object (status, title, org, contacts, gameTypes[], audiences[],
-  schedule[], blurb, description, ticketUrl, image, etc.). Shared by both pages.
-- `js/admin.js`, `js/public.js`, `js/map.js` — page-specific rendering.
-- `css/base.css` (shared vars/reset) + `css/admin.css` + `css/public.css` + `css/map.css`.
+  clean `Event` object (status, title, org, gameTypes[], audiences[],
+  schedule[], blurb, description, ticketUrl, image, etc.). Shared by every page.
+  Resolves `SAMPLE_CSV_URL` against the location of `data.js` itself (not the
+  page), so it works correctly whether loaded from the root or from `private/`.
+- `js/admin.js`, `js/public.js`, `js/map.js` (admin map), `js/map-public.js`
+  (public map) — page-specific rendering.
+- `css/base.css` (shared vars/reset) + `css/admin.css` + `css/public.css` +
+  `css/map.css` (admin map) + `css/map-public.css` (public map).
 - `images/` — bundled event images + placeholder SVG + favicon.
 - Graceful states: loading spinner, empty state, fetch-error message.
 - Time parsing lives in `data.js` (`startMin`/`endMin`) and feeds the calendar grid.
 
 ---
 
-## 8. Hosting (GitHub Pages, zero cost)
+## 8. Hosting (GitHub Pages, zero cost) & the privacy architecture
 
 - Repo `sgf-schedule`, Pages served from `main` branch root.
-- Public page at `/` (`index.html`); admin at `/admin.html`, map at `/map.html`
-  (unlisted URLs — obscure, not secret).
+- Public schedule at `/` (`index.html`), public map at `/map.html`; admin
+  schedule at `/private/admin.html`, admin map at `/private/map.html`.
+  **"private/" is a folder name, not access control** — same as before, these
+  URLs are unlisted/obscure, not secret or authenticated. The actual privacy
+  boundary is that **no contact data exists in anything the app fetches** (see
+  below), not the URL's obscurity.
 - Optional `CNAME` for a custom domain later.
 
-### Config split — `js/config.js` vs `js/config.admin.js`
-`js/config.js` is loaded by **every** page, including the public one — anything
-in it is downloaded by every visitor's browser and readable in page source. The
-admin/map-only `ADMIN_CSV_URL` (the full "Form Responses 1" export, containing
-Name/Email/Mobile/Discord/Alternate Contact for every organiser) therefore lives
-in a **separate** file, `js/config.admin.js`, loaded only by `admin.html` and
-`map.html` (right after `config.js`, before `data.js`). **Never add a `<script>`
-tag for `config.admin.js` to `index.html`.** Anything genuinely public (festival
-days, statuses, the sanitised CSV link, the notify-form link) stays in the
-shared `config.js`.
+### Why there's only one CSV now
+Originally the plan was two CSVs: a full one (with contacts) for admin, a
+sanitised one for public, each gated behind a separate config file
+(`js/config.js` vs `js/config.admin.js`) so only admin/map pages downloaded the
+contact-containing link. That got replaced with a simpler, more robust design
+after investigating Google Sheets' "Publish to web" feature directly in the
+Sheet's UI:
 
-### ⚠️ Known residual exposure — needs a sheet-side fix
-The Google Sheet's "Publish to web" is currently scoped to the **entire
-document**, not just the Sanitised Results sheet. That means the full,
-contact-containing "Form Responses 1" tab is reachable by anyone who has *any*
-published link into this workbook — even just the sanitised one — because
-Google's own `.../pubhtml` page lists every published tab's name and `gid` in
-plaintext, and the CSV export accepts any `gid` under the same publish ID. The
-code fix above stops the link being handed out for free, but a moderately
-curious visitor could still find it via `/pubhtml`.
-**Fix:** in the Sheet, go to File → Share → Publish to web, and change the
-scope from "Entire document" to just the **Sanitised Results** sheet, then
-republish. ⚠️ This may change the published CSV URL — if it does,
-`PUBLIC_CSV_URL` in `js/config.js` needs updating to match, or the public page
-will break. This wasn't done automatically because it modifies live public
-sharing settings on your document.
+- The scope dropdown ("Entire document" vs a specific sheet) only changes the
+  **preview link text** shown in the dialog — the actual access grant is a
+  single global toggle for the whole spreadsheet. Google Sheets does not support
+  publishing two sheets from one workbook on independently-revocable URLs.
+- Confirmed empirically: with "Entire document" published, `.../pubhtml` lists
+  **every** tab's name and `gid` in plaintext, so anyone who has *any* published
+  link into the workbook can discover and fetch *any* other tab in it — the
+  admin-only config file wasn't a complete fix on its own, just a smaller target.
+
+**Resolution:** every page — public and admin alike — now reads the **same**
+single CSV, the "Sanitised Results" tab, which already excludes the five
+contact columns *at the spreadsheet level* (via its `QUERY` formula, §9 item 2).
+There is nothing contact-containing for the app to ever fetch, so there is
+nothing to leak regardless of how the sheet's publish scope is configured.
+Admin's event drawer links directly to the source Sheet (`private/js/admin.js`
+→ `SHEET_EDIT_URL`) for anyone who needs to look up an organiser's contact
+details, which requires the admin's own Google account permissions on that
+Sheet — not something this app ever handles.
+
+### ⚠️ Remaining sheet-side cleanup (optional but recommended)
+The Sheet's "Publish to web" is still scoped to **"Entire document"**, which
+means the raw "Form Responses 1" tab (with contacts) is still technically
+reachable by URL for anyone who goes looking, even though the app itself never
+links to or fetches it any more. This is now a hygiene item, not an active
+leak: **File → Share → Publish to web → Stop publishing** (or narrow the scope
+to just "Sanitised Results") fully closes it. Wasn't done automatically because
+changing your document's live public-sharing settings needs your own hands on
+the confirmation dialog — an automated attempt to click through it hit a native
+browser confirm dialog that couldn't be reliably driven by tooling and was
+abandoned rather than risk an uncontrolled click.
 
 ---
 
@@ -274,25 +327,25 @@ sharing settings on your document.
    Alternate Contact Method (verified live via the published CSV: 30 columns,
    zero contact fields). If the form's columns are ever reordered or renamed,
    this formula's column letters need updating to match.
-3. **Map page:** optionally add a `Venue Lat/Lng` column to override geocoding for
-   any venues Nominatim gets wrong (hybrid approach — see §5). Not required to
-   start; geocoding runs without it.
+3. **Map pages:** optionally add a `Venue Lat/Lng` column to override geocoding
+   for any venues Nominatim gets wrong (hybrid approach — see §5). Not required
+   to start; geocoding runs without it.
 4. Provide/confirm the SGF logo and any real event thumbnails/URLs.
 5. **When real event submissions start arriving**, flip `USE_SAMPLE_DATA` to
-   `false` in `js/config.js` (commit + push) to switch all three pages from the
-   sample dataset to live sheet data. Both CSVs are already live and correctly
+   `false` in `js/config.js` (commit + push) to switch every page from the
+   sample dataset to live sheet data. The CSV is already live and correctly
    shaped — this is the only remaining switch.
-6. ⚠️ **Privacy — republish the sheet scoped to one sheet, not the entire
-   document.** See §8 "Known residual exposure." Right now anyone who finds the
-   public/sanitised CSV link can also reach the full contact-containing tab via
-   Google's own `/pubhtml` tab listing. File → Share → Publish to web → change
-   scope to just **Sanitised Results** → republish. Check whether the CSV URL
-   changes as a result, and if it does, update `PUBLIC_CSV_URL` in
-   `js/config.js` to match (otherwise the public page will break) before pushing.
+6. **Sheet hygiene (optional, see §8):** File → Share → Publish to web → Stop
+   publishing "Entire document" (or rescope to just "Sanitised Results"). Not
+   urgent — the app no longer fetches or exposes the contact-containing tab
+   either way — but worth doing to fully close it off at the source.
 
 ## 10. Build order
 1. **Admin page first** — build, review against the full CSV, iterate until it
-   works how you want. *(done — Day / Calendar / List views on sample data)*
+   works how you want. *(done — Schedule / Day / List views)*
 2. **Public page second** — build to match the screenshot once admin is signed off.
-   *(done — peach design, date rail, published-only cards on sample data)*
-3. **Map page third** — *(done — Leaflet + hybrid geocoding, linked from admin)*
+   *(done — peach design, date rail, published-only cards)*
+3. **Map pages third** — admin map, then a public-facing duplicate.
+   *(done — Leaflet + hybrid geocoding, both variants)*
+4. **Privacy hardening** — collapse to a single non-contact-containing CSV for
+   every page, move admin pages under `private/`. *(done)*
