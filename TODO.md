@@ -11,7 +11,7 @@
 - [x] P1: Fix specific-date matching so non-festival dates are not misclassified into 12-18 Oct 2026.
 - [x] P2: Validate and normalize user-provided URLs before rendering them as links.
 - [x] P2: Fix tentative multi-day labels so day-specific views only show that day's slot(s).
-- [ ] P2: Fix the admin "Unscheduled / TBD" filter so Before/After dated events stay out of that bucket.
+- [x] P2: Fix the admin "Unscheduled / TBD" filter so Before/After dated events stay out of that bucket.
 
 ## Future Consideration
 

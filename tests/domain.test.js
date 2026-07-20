@@ -171,6 +171,33 @@ test('admin filters reuse shared logic for status, publication, membership, and 
   );
 });
 
+test('matchesDayFilter keeps before/after events out of the unscheduled bucket', () => {
+  const beforeEvent = buildEvent({
+    Organisation: 'Warm-Up',
+    'Stage of Planning': 'Announced / Live',
+    'What is the specific date being planned?': 'Fri, Oct 9',
+  });
+  const afterEvent = buildEvent({
+    Organisation: 'Weekend Follow-Up',
+    'Stage of Planning': 'Ideation',
+    'What is the specific date being planned?': 'Sun Oct 25',
+  });
+  const otherEvent = buildEvent({
+    Organisation: 'Story Forge',
+    'Stage of Planning': 'Early/Unconfirmed Planning',
+    'If still planning, what day/time are you planning for? [Other date]': 'Date still being decided with venue',
+  });
+  const blankEvent = buildEvent({
+    Organisation: 'Totally TBD',
+    'Stage of Planning': 'Ideation',
+  });
+
+  assert.equal(Filters.matchesDayFilter(beforeEvent, 'unscheduled'), false);
+  assert.equal(Filters.matchesDayFilter(afterEvent, 'unscheduled'), false);
+  assert.equal(Filters.matchesDayFilter(otherEvent, 'unscheduled'), true);
+  assert.equal(Filters.matchesDayFilter(blankEvent, 'unscheduled'), true);
+});
+
 test('shared day and schedule summaries support admin and map views', () => {
   const ev = buildEvent({
     Organisation: 'Story Forge',

@@ -9,11 +9,9 @@
     return true;
   }
 
-  // Intentionally mirrors the current "unscheduled" behavior so the shared
-  // filter layer can land before the bucket bug fix.
   function matchesDayFilter(ev, value) {
     if (!value) return true;
-    if (value === 'unscheduled') return !ev.scheduled;
+    if (value === 'unscheduled') return !ev.scheduled && (!ev.region || ev.region === 'other');
     return ev.dayIsos.includes(value);
   }
 
