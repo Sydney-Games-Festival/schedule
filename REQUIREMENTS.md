@@ -188,12 +188,19 @@ Grotesk** (body).
 - **Audience filter:** pill chips below the day header — **All / Players /
   Makers / Learners** — multi-select (OR logic; "All" clears the selection).
   Coarse grouping derived from the form's `What type of audience are you
-  targeting?` values: **Players** = anything containing "player" or "general
-  public"; **Makers** = "maker" or "industry"; **Learners** = "student" or
-  "academic" (see `audienceBuckets()` in `js/public.js`). Filtering a day down
-  to zero matching events shows a plain "No events match this filter for this
-  date" message — distinct from the "nothing announced yet" empty state, which
-  only appears when the day truly has no published events at all.
+  targeting?` values via an **exact-match lookup** per audience value (not a
+  substring search — "Other Industry Players" contains the literal text
+  "player" but is a Makers category, so substring matching wrongly caught it;
+  see `AUDIENCE_BUCKET_MAP` in `js/public.js`):
+  - **Players** = General Public, Beginner Players, Experienced Players
+  - **Makers** = Beginner Makers, Experienced Makers, Other Industry Players
+  - **Learners** = Students, Academics
+  - (the free-text "Other" option isn't bucketed — only appears under "All")
+
+  Filtering a day down to zero matching events shows a plain "No events match
+  this filter for this date" message — distinct from the "nothing announced
+  yet" empty state, which only appears when the day truly has no published
+  events at all.
 - **Event card:**
   - Time range (top-left) · audience badge "★ MAKERS/PLAYERS/…" derived from the
     most specific audience · **GET TICKETS** button → ticket URL (disabled style
@@ -339,10 +346,11 @@ exclusively (§1, §8 above).
    for any venues Nominatim gets wrong (hybrid approach — see §5). Not required
    to start; geocoding runs without it.
 4. Provide/confirm the SGF logo and any real event thumbnails/URLs.
-5. **When real event submissions start arriving**, flip `USE_SAMPLE_DATA` to
-   `false` in `js/config.js` (commit + push) to switch every page from the
-   sample dataset to live sheet data. The CSV is already live and correctly
-   shaped — this is the only remaining switch.
+5. ~~Flip `USE_SAMPLE_DATA`~~ — **done**, set to `false` in `js/config.js`. The
+   live sheet has no real submissions yet (headers only), so every page
+   currently auto-falls-back to sample data per `data.js`'s existing fallback
+   logic — this will switch over automatically the moment real rows appear, no
+   further code change needed.
 6. ~~Sheet hygiene~~ — **done**. "Form Responses 1" is fully unpublished
    (verified: its CSV export now 401s, and `/pubhtml` no longer lists it).
    "Sanitised Results" remains published and reachable, which is correct and
