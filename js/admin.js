@@ -52,6 +52,13 @@
   function timeLabel(ev) {
     return Domain.eventTimeLabel(ev) || Domain.tentativeSlots(ev).join(' · ');
   }
+  function listTimeLabel(ev) {
+    return Domain.eventTimeRangeLabel(ev, {
+      lowercase: true,
+      separator: ' - ',
+      spaceBeforeMeridiem: false,
+    }) || timeLabel(ev) || '—';
+  }
   const dayShortsFor = (ev) => Domain.dayShortsFor(ev, dayByIso);
 
   // Which AM/PM/EVE buckets does an event fall in on a given day?
@@ -279,7 +286,7 @@
       <td><span class="ev-title">${esc(ev.title)}</span></td>
       <td>${esc(ev.organisation || ev.organiser || '')}</td>
       <td>${esc(dayShortsFor(ev) || (ev.otherDate ? 'Other' : '—'))}${ev.confirmedTiming ? '' : ' <span class="tentative-flag">tent</span>'}</td>
-      <td>${esc(timeLabel(ev) || '—')}</td>
+      <td>${esc(listTimeLabel(ev))}</td>
       <td>${esc(ev.audiences.join(', '))}</td>
       <td>${esc(ev.gameTypes.join(', '))}</td>
       <td>${esc(ev.location || '')}</td>

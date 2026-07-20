@@ -333,6 +333,23 @@
     return opts.includeOutsideLabel && ev.outsideLabel ? ev.outsideLabel : '';
   }
 
+  function formatClock(m, options) {
+    const opts = options || {};
+    const p = parts(m);
+    const ap = opts.lowercase ? p.ap.toLowerCase() : p.ap;
+    const gap = opts.spaceBeforeMeridiem === false ? '' : ' ';
+    return `${p.hm}${gap}${ap}`;
+  }
+
+  function eventTimeRangeLabel(ev, options) {
+    const opts = options || {};
+    if (ev.startMin == null) return '';
+    if (ev.endMin != null) {
+      return `${formatClock(ev.startMin, opts)}${opts.separator || ' – '}${formatClock(ev.endMin, opts)}`;
+    }
+    return formatClock(ev.startMin, opts);
+  }
+
   function eventEndMin(ev) {
     if (ev.endMin != null) return ev.endMin;
     if (ev.startMin != null) return ev.startMin + 60;
@@ -426,8 +443,10 @@
     bucketsForDay,
     dayShortsFor,
     eventEndMin,
+    eventTimeRangeLabel,
     eventTimeLabel,
     festivalBounds,
+    formatClock,
     getScheduleEntry,
     hasTimedSchedule,
     headerIndex,

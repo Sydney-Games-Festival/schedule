@@ -158,6 +158,10 @@ test('shared presentation helpers return consistent labels', () => {
   });
 
   assert.equal(Domain.eventTimeLabel(ev), '7:00 – 11:00 PM');
+  assert.equal(
+    Domain.eventTimeRangeLabel(ev, { lowercase: true, separator: ' - ', spaceBeforeMeridiem: false }),
+    '7:00pm - 11:00pm'
+  );
   assert.equal(Domain.headerRange([ev]), '7 - 11 PM');
   assert.equal(Domain.audienceBadge(ev), 'MAKERS');
   assert.deepEqual([...Domain.audienceBuckets(ev)].sort(), ['makers', 'players']);
