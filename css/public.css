@@ -56,6 +56,14 @@ body::before {
   color: transparent; -webkit-text-stroke: 2px var(--orange-soft); text-stroke: 2px var(--orange-soft);
   letter-spacing: .02em; white-space: nowrap; }
 
+/* ---- Audience filter chips ---- */
+.audience-filter { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 8px 20px; }
+.aud-chip { font-family: var(--font-display); font-weight: 600; font-size: 13px; letter-spacing: .02em;
+  padding: 7px 16px; border-radius: 999px; border: 1.5px solid var(--orange-soft); background: var(--card);
+  color: var(--orange-deep); cursor: pointer; }
+.aud-chip:hover { border-color: var(--orange); }
+.aud-chip.active { background: var(--orange); border-color: var(--orange); color: #fff; }
+
 .cards { display: flex; flex-direction: column; gap: 22px; }
 
 /* ---- Event card ---- */

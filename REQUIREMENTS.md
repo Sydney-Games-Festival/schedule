@@ -183,7 +183,17 @@ Grotesk** (body).
   notified of updates** button linking to the updates-signup form
   (`NOTIFY_FORM_URL` in `js/config.js`).
 - **Day header:** big day label + right-aligned **outlined** hour range
-  ("5 - 11 PM"), computed from that day's published events.
+  ("5 - 11 PM"), computed from that day's published (and audience-filtered)
+  events.
+- **Audience filter:** pill chips below the day header — **All / Players /
+  Makers / Learners** — multi-select (OR logic; "All" clears the selection).
+  Coarse grouping derived from the form's `What type of audience are you
+  targeting?` values: **Players** = anything containing "player" or "general
+  public"; **Makers** = "maker" or "industry"; **Learners** = "student" or
+  "academic" (see `audienceBuckets()` in `js/public.js`). Filtering a day down
+  to zero matching events shows a plain "No events match this filter for this
+  date" message — distinct from the "nothing announced yet" empty state, which
+  only appears when the day truly has no published events at all.
 - **Event card:**
   - Time range (top-left) · audience badge "★ MAKERS/PLAYERS/…" derived from the
     most specific audience · **GET TICKETS** button → ticket URL (disabled style
@@ -335,10 +345,16 @@ abandoned rather than risk an uncontrolled click.
    `false` in `js/config.js` (commit + push) to switch every page from the
    sample dataset to live sheet data. The CSV is already live and correctly
    shaped — this is the only remaining switch.
-6. **Sheet hygiene (optional, see §8):** File → Share → Publish to web → Stop
-   publishing "Entire document" (or rescope to just "Sanitised Results"). Not
-   urgent — the app no longer fetches or exposes the contact-containing tab
-   either way — but worth doing to fully close it off at the source.
+6. **Sheet hygiene (optional, see §8):** Publishing "Form Responses 1" and
+   "Sanitised Results" as two separate items (instead of "Entire document")
+   was tried — **verified it did not close the gap**: both tabs are still
+   readable via the exact same publish link, and Google's `/pubhtml` page
+   still lists both tab names and `gid`s in plaintext with a single
+   unauthenticated request (nothing requires guessing). The only fix that has
+   actually worked in testing is **File → Share → Publish to web → Stop
+   publishing**, fully, not a rescope. Not urgent — the app no longer fetches
+   or exposes the contact-containing tab either way — but worth doing to
+   close it off at the source.
 
 ## 10. Build order
 1. **Admin page first** — build, review against the full CSV, iterate until it

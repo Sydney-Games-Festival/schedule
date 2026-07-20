@@ -14,7 +14,13 @@
     { key: 'other', short: 'SOON', sub: 'Date TBD' },
   ];
 
-  const state = { events: [], scopes: [], selected: null };
+  const AUDIENCE_FILTERS = [
+    { key: 'players', label: 'Players' },
+    { key: 'makers', label: 'Makers' },
+    { key: 'learners', label: 'Learners' },
+  ];
+
+  const state = { events: [], scopes: [], selected: null, audienceFilter: new Set() };
 
   /* ---- time formatting ---- */
   const parts = (m) => {
@@ -61,6 +67,22 @@
     return ev.audiences[0] ? ev.audiences[0].toUpperCase() : '';
   }
 
+  // Coarse 3-way grouping for the audience filter chips (distinct from the
+  // finer-grained badge above): Players / Makers / Learners.
+  function audienceBuckets(ev) {
+    const a = ev.audiences.join(' ').toLowerCase();
+    const buckets = new Set();
+    if (a.includes('player') || a.includes('general public')) buckets.add('players');
+    if (a.includes('maker') || a.includes('industry')) buckets.add('makers');
+    if (a.includes('student') || a.includes('academic')) buckets.add('learners');
+    return buckets;
+  }
+  function passesAudienceFilter(ev) {
+    if (!state.audienceFilter.size) return true;
+    const buckets = audienceBuckets(ev);
+    return [...state.audienceFilter].some((b) => buckets.has(b));
+  }
+
   /* ---- scopes (rail entries) ---- */
   function eventsForScope(key) {
     if (dayByIso[key]) return state.events.filter((e) => e.dayIsos.includes(key));
@@ -89,6 +111,14 @@
   function mobileOptionsHtml() {
     return state.scopes.map((s) =>
       `<option value="${esc(s.key)}" ${s.key === state.selected ? 'selected' : ''}>${esc(s.short)} — ${esc(s.sub)}</option>`).join('');
+  }
+
+  function audienceFilterHtml() {
+    const allActive = state.audienceFilter.size === 0;
+    const chips = [`<button class="aud-chip ${allActive ? 'active' : ''}" data-aud="">All</button>`]
+      .concat(AUDIENCE_FILTERS.map((f) =>
+        `<button class="aud-chip ${state.audienceFilter.has(f.key) ? 'active' : ''}" data-aud="${f.key}">${esc(f.label)}</button>`));
+    return chips.join('');
   }
 
   function footCell(ico, text) {
@@ -132,15 +162,20 @@
     $('.day-header').hidden = false;
     $('#rail').innerHTML = railHtml();
     $('#mobileDaySelect').innerHTML = mobileOptionsHtml();
-    const evs = eventsForScope(state.selected).slice()
+    $('#audienceFilter').innerHTML = audienceFilterHtml();
+    const dayEvs = eventsForScope(state.selected);
+    const evs = dayEvs.filter(passesAudienceFilter).slice()
       .sort((a, b) => (a.startMin ?? 1e9) - (b.startMin ?? 1e9));
     const scope = state.scopes.find((s) => s.key === state.selected);
     $('#dayTitle').textContent = scope ? scope.short : '';
     $('#timeRange').textContent = headerRange(evs);
-    $('#cards').innerHTML = evs.length ? evs.map(cardHtml).join('') : emptyStateHtml();
+    $('#cards').innerHTML = evs.length ? evs.map(cardHtml).join('') : emptyStateHtml(dayEvs.length > 0);
   }
 
-  function emptyStateHtml() {
+  function emptyStateHtml(hasAnyForDay) {
+    if (hasAnyForDay) {
+      return `<div class="empty-public"><p>No events match this filter for this date.</p></div>`;
+    }
     return `<div class="empty-public">
       <p>No events announced yet for this date — check back soon!</p>
       <a class="btn-notify" href="${esc(CFG.NOTIFY_FORM_URL)}" target="_blank" rel="noopener">Get notified of updates</a>
@@ -158,7 +193,7 @@
       state.selected = (firstDay || state.scopes[0] || {}).key || null;
       if (!state.scopes.length) {
         $('#loading').hidden = true;
-        $('#cards').innerHTML = emptyStateHtml();
+        $('#cards').innerHTML = emptyStateHtml(false);
         return;
       }
       render();
@@ -182,6 +217,15 @@
     state.selected = e.target.value;
     render();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  $('#audienceFilter').addEventListener('click', (e) => {
+    const t = e.target.closest('[data-aud]');
+    if (!t) return;
+    const key = t.dataset.aud;
+    if (key === '') state.audienceFilter.clear();
+    else if (state.audienceFilter.has(key)) state.audienceFilter.delete(key);
+    else state.audienceFilter.add(key);
+    render();
   });
 
   load();
