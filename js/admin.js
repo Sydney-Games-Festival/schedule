@@ -2,6 +2,7 @@
  * Views: Day (single day, grouped AM/PM/EVE) · Calendar (time × venue grid) · List (sortable). */
 (function () {
   const CFG = window.SGF_CONFIG;
+  const AdminSchedule = window.SGF_ADMIN_SCHEDULE;
   const AdminStats = window.SGF_ADMIN_STATS;
   const Domain = window.SGF_DOMAIN;
   const Filters = window.SGF_FILTERS;
@@ -28,12 +29,7 @@
     { key: 'PM', label: 'Afternoon', sub: '12–5pm' },
     { key: 'EVE', label: 'Evening', sub: '5pm onwards' },
   ];
-  // Catch-all buckets for events outside the Oct 12–18 window.
-  const REGIONS = [
-    { key: 'before', tab: 'Before', dow: 'pre', label: 'Before the festival' },
-    { key: 'after', tab: 'After', dow: 'post', label: 'After the festival' },
-    { key: 'other', tab: 'Other', dow: 'TBD', label: 'Other / date TBD' },
-  ];
+  const REGIONS = AdminSchedule.REGIONS;
 
   const state = {
     all: [],
@@ -126,15 +122,11 @@
       <div class="slots">${sections || '<div class="day-empty">No events scheduled</div>'}</div></div>`;
   }
 
-  // One out-of-window region (Before / After / Other) as a flat card grid.
   function regionBlockHtml(region, list) {
-    const evs = list.filter((ev) => ev.region === region.key)
-      .sort((a, b) => (a.outsideIso || '').localeCompare(b.outsideIso || '') || (a.startMin ?? 1e9) - (b.startMin ?? 1e9));
-    if (!evs.length) return '';
-    const cards = evs.map((ev) => evCardHtml(ev, null, { showDate: true })).join('');
-    return `<div class="day-block region-block">
-      <div class="day-head"><h2 class="head">${esc(region.tab)}</h2><span class="dow">${esc(region.label)} · ${evs.length} event${evs.length === 1 ? '' : 's'}</span></div>
-      <div class="slot-body region-body">${cards}</div></div>`;
+    return AdminSchedule.regionBlockHtml(region, list, {
+      esc,
+      renderCard: (ev) => evCardHtml(ev, null, { showDate: true }),
+    });
   }
 
   // All-days matrix: festival days across columns, AM/PM/EVE down rows.

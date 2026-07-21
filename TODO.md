@@ -41,7 +41,7 @@
   named regions, so such events rendered nowhere while still being counted in
   "N of N events". `AdminStats.eventDayBuckets` and `matchesDayFilter` already
   treated a null region as TBD — `buildSchedule` is now consistent with them.
-- [ ] Add a regression test that fully undated events render in the admin
+- [x] Add a regression test that fully undated events render in the admin
   Schedule "Other" bucket.
 
 ## Code Review Findings (2026-07-21)
