@@ -61,15 +61,13 @@
 
 ### Low
 
-- [ ] Stats "Total" row: per-column counts can exceed the total-column value
+- [x] Stats "Total" row: per-column counts can exceed the total-column value
   because multi-day / multi-family events count in more than one bucket. This is
-  by design — a 3-day event genuinely spans 3 day columns, and a mixed event
-  spans 2 game-family rows. **Suggested fix:** add a one-line caption under the
-  stats tables clarifying that day/family columns count each event once per day
-  (or family) it belongs to, so those columns can total more than the unique
-  event count; keep the Total column as the true unique-event count. Cheapest and
-  most honest option — avoids implying the columns should sum to the total.
-  (suggestion only — not scheduled here)
+  by design — a 3-day event genuinely spans 3 day columns. Fixed by adding an
+  explanatory tooltip to every stats table header (reusing the existing
+  `statsTooltipHtml` mechanism). Placed at header level rather than on the Total
+  column because `.stats-block` is `overflow: hidden` and `.stats-table-wrap` is
+  `overflow-x: auto`, which would clip a tooltip rendered inside a `<th>`.
 - [ ] Admin defaults to live data with no sample fallback, so an empty live sheet
   makes the admin look empty until "Sample" is selected. Intentional given real
   data is arriving; noted. (deferred)

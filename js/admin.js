@@ -222,8 +222,17 @@
     }));
   }
 
+  // Day/region columns count an event once per day it runs, while the Total
+  // column and Total row count each event once — so a row's columns can sum to
+  // more than its Total. Explain that wherever a stats table is rendered.
+  const TOTAL_TOOLTIP = 'Day, Before, After and TBD columns count an event once for every day it runs, so a row\'s columns can add up to more than its Total. The Total column and the Total row count each event once.';
+  const slugify = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
   function statsTableHtml(title, subtitle, summary) {
-    return statsTableHtmlWithOptions(title, subtitle, summary, {});
+    return statsTableHtmlWithOptions(title, subtitle, summary, {
+      tooltipId: `${slugify(title)}-total-tooltip`,
+      tooltipText: TOTAL_TOOLTIP,
+    });
   }
 
   function statsTooltipHtml(text, id) {
@@ -310,7 +319,7 @@
       ${statsTableHtml('Stage', 'Counts by current filtered event set.', stageSummary)}
       ${statsTableHtmlWithOptions('Game family', 'Screen and tabletop rollups. Events can appear in more than one family row.', typeFamilySummary, {
         tooltipId: 'game-family-tooltip',
-        tooltipText: gameFamilyTooltip,
+        tooltipText: `${gameFamilyTooltip} ${TOTAL_TOOLTIP}`,
       })}
       ${statsTableHtml('Game type', 'Detailed breakdown. Events can appear in more than one game-type row.', typeSummary)}
     `;
