@@ -32,6 +32,16 @@
 - [x] Add Screen (Digital) and Tabletop (Non-Digital) rollups to the admin game-type stats while keeping the detailed breakdown.
 - [x] Add a tooltip to the admin Game Family stats table explaining the family mapping and uncategorised bucket.
 
+## Bug Fixes (cont.)
+
+- [x] Fix undated events vanishing from the admin Schedule view. `buildSchedule`
+  only set `region = 'other'` when the organiser had typed *some* date text, so
+  an event with no specific date, no planning-grid entry and no "other date"
+  note kept `region = null`. The Schedule view renders only festival days and
+  named regions, so such events rendered nowhere while still being counted in
+  "N of N events". `AdminStats.eventDayBuckets` and `matchesDayFilter` already
+  treated a null region as TBD — `buildSchedule` is now consistent with them.
+
 ## Code Review Findings (2026-07-21)
 
 ### Critical

@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
+const AdminStats = require('../js/admin-stats.js');
 const Domain = require('../js/domain.js');
 const Filters = require('../js/filters.js');
 const Links = require('../js/links.js');
@@ -278,6 +279,27 @@ test('admin filters reuse shared logic for status, publication, membership, and 
     Filters.matchesAdminFilters(ev, Object.assign({}, filters, { search: 'megagame' })),
     false
   );
+});
+
+test('an event with no date information at all still lands in the TBD bucket', () => {
+  // Mirrors the live "Tournament" row: no specific date, no planning-grid entry
+  // and no "other date" note. Leaving region null made it render nowhere in the
+  // admin Schedule view, which only draws festival days and named regions.
+  const ev = buildEvent({
+    'Event Name': 'Tournament',
+    Organisation: 'Meeplequake',
+    'Stage of Planning': 'Ideation (exploring the concept/audience/etc)',
+    'Tell us about your event': 'We will host a tournament for a popular short game',
+    'Where do you plan to host the event?': 'Unknown at this time',
+  });
+
+  assert.deepEqual(ev.dayIsos, []);
+  assert.equal(ev.scheduled, false);
+  assert.equal(ev.region, 'other');
+  assert.equal(ev.outsideLabel, '');
+  // Consistent with the buckets the rest of the app already used.
+  assert.deepEqual(AdminStats.eventDayBuckets(ev), ['other']);
+  assert.equal(Filters.matchesDayFilter(ev, 'unscheduled'), true);
 });
 
 test('matchesDayFilter keeps before/after events out of the unscheduled bucket', () => {

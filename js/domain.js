@@ -208,7 +208,13 @@
       });
       base.region = parsed.iso < bounds.first ? 'before' : parsed.iso > bounds.last ? 'after' : null;
       if (!base.region) base.region = 'after';
-    } else if (specific || otherDate) {
+    } else {
+      // No festival day, no parseable date — the event is undated, whether or
+      // not the organiser typed anything. It must still land in a bucket: the
+      // admin Schedule view only renders events that are on a festival day or
+      // in a named region, so leaving region null makes the event invisible.
+      // (AdminStats.eventDayBuckets and matchesDayFilter already treat "no
+      // region" as TBD; this keeps buildSchedule consistent with them.)
       base.region = 'other';
       base.outsideLabel = specific || otherDate;
     }
