@@ -29,24 +29,11 @@
     return cleanText(value);
   }
 
-  function cleanUrlText(value) {
-    const raw = String(value == null ? '' : value).trim();
-    if (!raw) return '';
-
-    const candidate =
-      /^[a-z][a-z0-9+.-]*:/i.test(raw) ? raw :
-      /^[a-z0-9.-]+\.[a-z]{2,}(?:[/:?#]|$)/i.test(raw) || /^localhost(?:[/:?#]|$)/i.test(raw)
-        ? `https://${raw}`
-        : raw;
-
-    try {
-      const parsed = new URL(candidate);
-      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return '';
-      return parsed.href;
-    } catch (err) {
-      return '';
-    }
-  }
+  // URL normalization deliberately lives in js/links.js, not here. It enforces a
+  // security-relevant scheme allowlist (http/https only, so javascript:, data:
+  // and mailto: are dropped), and a second copy of that rule would eventually
+  // drift out of sync with the first. Callers that need to sanitise a URL use
+  // SGF_LINKS.cleanUrl / SGF_LINKS.hasUrl; buildEvent receives it via options.
 
   function cleanPublished(value, norm) {
     const normalize = typeof norm === 'function'
@@ -61,6 +48,5 @@
     cleanMultiline,
     cleanPublished,
     cleanText,
-    cleanUrlText,
   };
 });

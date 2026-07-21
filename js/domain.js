@@ -233,11 +233,12 @@
     const cleanPublished = validation && typeof validation.cleanPublished === 'function'
       ? function (value) { return validation.cleanPublished(value, norm); }
       : function (value) { return /^y/.test(norm(value)); };
-    const cleanUrl = validation && typeof validation.cleanUrlText === 'function'
-      ? validation.cleanUrlText
-      : links && typeof links.cleanUrl === 'function'
-        ? links.cleanUrl
-        : function (url) { return String(url || '').trim(); };
+    // Single source of URL sanitisation (see js/links.js). Fails closed: without
+    // the links module we drop the URL rather than render an unvalidated one,
+    // since this is what keeps javascript:/data: URLs out of the pages.
+    const cleanUrl = links && typeof links.cleanUrl === 'function'
+      ? links.cleanUrl
+      : function () { return ''; };
     const organisation = cleanText(pick(row, hdrs, 'organisation'));
     const eventName = cleanText(pick(row, hdrs, 'event name'));
     const sched = buildSchedule(row, hdrs, cfg, validation);

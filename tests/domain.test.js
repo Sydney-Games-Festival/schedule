@@ -63,10 +63,22 @@ test('shared validation helpers centralize cleanup for text, lists, and publishe
   assert.deepEqual(Validation.cleanList(' Board Games,  Card Games / TCGs , '), ['Board Games', 'Card Games / TCGs']);
   assert.equal(Validation.cleanPublished(' Y ', Domain.norm), true);
   assert.equal(Validation.cleanPublished('n', Domain.norm), false);
-  assert.equal(Validation.cleanUrlText(' www.example.com/tickets '), 'https://www.example.com/tickets');
-  assert.equal(Validation.cleanUrlText('javascript:alert(1)'), '');
+  assert.equal(Links.cleanUrl(' www.example.com/tickets '), 'https://www.example.com/tickets');
+  assert.equal(Links.cleanUrl('javascript:alert(1)'), '');
   assert.equal(Links.cleanUrl('mailto:test@example.com'), '');
   assert.equal(Links.hasUrl('data:text/html,hi'), false);
+});
+
+test('URL sanitisation has exactly one implementation', () => {
+  // links.js owns the http/https scheme allowlist. validation.js must not grow a
+  // second copy: two allowlists drift, and a fix applied to one would silently
+  // leave the other accepting javascript:/data: URLs.
+  assert.equal(typeof Links.cleanUrl, 'function');
+  assert.equal(Validation.cleanUrlText, undefined);
+  assert.ok(
+    !Object.keys(Validation).some((k) => /url/i.test(k)),
+    'validation.js should expose no URL helpers'
+  );
 });
 
 test('cleanMultiline keeps paragraph breaks while tidying horizontal whitespace', () => {

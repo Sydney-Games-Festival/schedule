@@ -56,8 +56,15 @@
   whitespace including newlines, and description/blurb render in
   `white-space: pre-wrap` containers, so multi-paragraph text loses its breaks.
   Add a newline-preserving `cleanMultiline` and route description/blurb through it.
-- [ ] Consolidate the duplicated URL normalization in `js/links.js` and
-  `js/validation.js` into one source of truth. (deferred)
+- [x] Consolidate the duplicated URL normalization in `js/links.js` and
+  `js/validation.js` into one source of truth. Confirmed the two were
+  behaviourally identical (zero differences across 15 edge cases plus
+  null/undefined) — no justification for keeping both, and duplicating a
+  security-relevant scheme allowlist invites drift. `links.js` is now the single
+  owner (it is the lower-level helper already used at every render site and
+  already passed into `buildEvent`); `validation.js` no longer exposes a URL
+  cleaner, `buildEvent` fails closed without it, and a test guards against the
+  duplicate reappearing.
 
 ### Low
 

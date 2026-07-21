@@ -332,6 +332,10 @@ render cleanly.
 Reuse the existing client-side normalization rules from:
 
 - [js/validation.js](/Users/ryan/Projects/SGF/sgf-schedule/js/validation.js)
+  Text, list, multiline and published-flag cleanup.
+- [js/links.js](/Users/ryan/Projects/SGF/sgf-schedule/js/links.js)
+  URL normalization and the http/https scheme allowlist — the single source for
+  URL rules, deliberately not duplicated in `validation.js`.
 - [js/domain.js](/Users/ryan/Projects/SGF/sgf-schedule/js/domain.js)
 - [js/config.js](/Users/ryan/Projects/SGF/sgf-schedule/js/config.js)
 
