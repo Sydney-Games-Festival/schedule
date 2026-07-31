@@ -132,10 +132,28 @@
     </div>`;
   }
 
+  // Show an unobtrusive "sample data" banner only when the page is actually
+  // serving sample events (i.e. someone opened it with ?data=sample), so a real
+  // visitor never sees it but a tester always knows the schedule is fake.
+  function renderSampleBanner(effectiveSource) {
+    const el = $('#sampleBanner');
+    if (!el) return;
+    const on = effectiveSource === 'sample';
+    document.body.classList.toggle('sample-active', on); // reserves top space (see CSS)
+    if (on) {
+      el.hidden = false;
+      el.innerHTML = `🔧 Sample data — preview only <a href="${esc(location.pathname)}">show live</a>`;
+    } else {
+      el.hidden = true;
+      el.innerHTML = '';
+    }
+  }
+
   /* ---- load ---- */
   async function load() {
     try {
-      const { events } = await window.SGF.loadEvents('public');
+      const { events, effectiveSource } = await window.SGF.loadEvents('public');
+      renderSampleBanner(effectiveSource);
       state.events = events.filter((e) => e.published);
       state.scopes = buildScopes();
       // Open on the first festival day that has events (not a pre-festival bucket).

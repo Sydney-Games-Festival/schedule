@@ -212,6 +212,15 @@ Grotesk** (body).
   - Missing display fields render as "???", matching the screenshot.
 - **Publish gate:** only events with `Published` = Y appear (§1).
 - Responsive single-column card body on mobile.
+- **Preview override:** appending **`?data=sample`** to the URL (or `?data=live`,
+  or a bare `?sample`) makes the public pages load the bundled sample dataset
+  instead of the live sheet — a no-config way to preview the design with events
+  before anything is published. A fixed "Sample data — preview only" banner (with
+  a "show live" link that strips the param) appears while it's active, so a real
+  visitor never sees it. Implemented centrally in `data.js` (`urlDataOverride`),
+  which only consults the URL when the caller left the mode on `auto`; the admin
+  passes an explicit mode from its own toggle, so it is unaffected. The public
+  venue map honours the same param and shows its existing "Sample data" pill.
 
 ---
 

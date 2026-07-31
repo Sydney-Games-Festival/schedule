@@ -109,6 +109,17 @@ body::before {
 .btn-notify:hover { background: var(--orange-deep); }
 .loading-public { text-align: center; color: var(--orange-deep); padding: 80px 20px; }
 
+/* Sample/preview banner — only shown when the page is opened with ?data=sample */
+.sample-banner { position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
+  z-index: 40; display: inline-flex; align-items: center; gap: 10px; max-width: calc(100vw - 24px);
+  background: #2a2a33; color: #fff; font-family: var(--font-display); font-weight: 600;
+  font-size: 13px; padding: 7px 14px; border-radius: 999px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.22); border: 1.5px solid var(--orange); }
+.sample-banner a { color: var(--orange); text-decoration: underline; white-space: nowrap; }
+.sample-banner a:hover { color: #fff; }
+/* Push the page down so the fixed banner never covers the day picker / header. */
+body.sample-active .layout { padding-top: 64px; }
+
 /* Brand badge (bottom-left) + venue map link (bottom-right) */
 .brand-badge { position: fixed; left: 16px; bottom: 16px; z-index: 25;
   display: inline-flex; align-items: center; gap: 8px; background: #2a2a33; color: #fff;

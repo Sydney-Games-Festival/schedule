@@ -15,6 +15,24 @@
   // browser always resolves them to the same final script URL.
   const SITE_ROOT = new URL('..', document.currentScript.src).href;
 
+  // Dev/testing override read from the page URL: ?data=sample or ?data=live
+  // (bare ?sample also works). Only consulted when the caller hasn't forced a
+  // mode — so the admin's own live/sample toggle is unaffected, but the public
+  // pages (which call loadEvents with no mode) can be pointed at sample data for
+  // a preview without any config change. Returns 'sample' | 'live' | null.
+  function urlDataOverride() {
+    try {
+      if (typeof location === 'undefined') return null;
+      const params = new URLSearchParams(location.search);
+      const v = (params.get('data') || '').toLowerCase();
+      if (v === 'sample' || v === 'live') return v;
+      if (params.has('sample')) return 'sample';
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   async function fetchCsv(url) {
     return new Promise((resolve, reject) => {
       Papa.parse(url, {
@@ -33,7 +51,12 @@
   async function loadEvents(source, options) {
     const liveUrl = CFG.EVENTS_CSV_URL;
     const sampleUrl = new URL(CFG.SAMPLE_CSV_URL, SITE_ROOT).href;
-    const mode = options && options.mode ? options.mode : 'auto';
+    let mode = options && options.mode ? options.mode : 'auto';
+    // Let the URL override sample/live only when the caller left it to 'auto'.
+    if (mode === 'auto') {
+      const override = urlDataOverride();
+      if (override) mode = override;
+    }
 
     async function parseUrl(url) {
       const bust = (url.includes('?') ? '&' : '?') + '_=' + Date.now();
@@ -81,6 +104,7 @@
 
   window.SGF = Object.assign(window.SGF || {}, {
     loadEvents,
+    urlDataOverride,
     _norm: Domain.norm,
   });
 })();
