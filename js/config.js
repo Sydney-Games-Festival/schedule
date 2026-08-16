@@ -1,10 +1,9 @@
 /* SGF Schedule — shared configuration, loaded by every page (admin, public, map).
  * There is a single event data source for the whole site: the "Sanitised
- * Results" sheet tab, which already excludes the five contact columns (Name,
- * Email Address, Mobile number, Discord handle, Alternate Contact Method) at
- * the spreadsheet level — see REQUIREMENTS.md §9 for why. Admins who need an
- * organiser's contact details open the source Google Sheet directly (linked
- * from the admin event drawer) rather than the app fetching that data.
+ * Results" sheet tab. It includes the organiser name needed by admin, but
+ * excludes email, mobile, Discord, and alternate contact details at the
+ * spreadsheet level. Admins who need those details open the source Google
+ * Sheet directly (linked from the admin event drawer).
  * Flip USE_SAMPLE_DATA to false once real submissions exist in the sheet.
  * Even when false, a live tab that returns zero events auto-falls back to sample. */
 window.SGF_CONFIG = {

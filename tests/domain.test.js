@@ -43,9 +43,9 @@ test('buildEvent normalizes confirmed events from sheet-like rows', () => {
     'Where do you plan to host the event?': 'Sydney Town Hall',
     'What is the specific date being planned?': 'Sat, Oct 18',
     'What is the start time being planned?': '10:00 AM',
-    'WIf known, what is the end time being planned?': '6:00 PM',
+    'What is the end time being planned?': '6:00 PM',
     'What URL should we direct people to? (more info, tickets)': ' https://example.com/tickets ',
-    'URL to Thumbnail': ' https://example.com/thumb.jpg ',
+    'URL to Hero Thumbnail': ' https://example.com/thumb.jpg ',
   });
 
   assert.equal(ev.organisation, 'Meeple Mates Sydney');
@@ -56,7 +56,7 @@ test('buildEvent normalizes confirmed events from sheet-like rows', () => {
   assert.equal(ev.startMin, 600);
   assert.equal(ev.endMin, 1080);
   assert.equal(ev.ticketUrl, 'https://example.com/tickets');
-  assert.equal(ev.thumbnail, 'https://example.com/thumb.jpg');
+  assert.equal(ev.heroThumbnail, 'https://example.com/thumb.jpg');
 });
 
 test('shared validation helpers centralize cleanup for text, lists, and published flags', () => {
@@ -91,15 +91,95 @@ test('cleanMultiline keeps paragraph breaks while tidying horizontal whitespace'
   assert.equal(Validation.cleanMultiline('  single   line  '), 'single line');
 });
 
-test('buildEvent preserves line breaks in description and blurb', () => {
+test('buildEvent preserves line breaks in description and program copy', () => {
   const ev = buildEvent({
     Organisation: 'Multi Line Co',
     'Stage of Planning': 'Announced / Live',
     'Tell us about your event': 'Line one.\n\nLine two.',
-    'Marketing Blurb (30 words)': 'Hook line.\nSecond line.',
+    'Marketing Description': 'Hook line.\nSecond line.',
   });
   assert.equal(ev.description, 'Line one.\n\nLine two.');
-  assert.equal(ev.blurb, 'Hook line.\nSecond line.');
+  assert.equal(ev.programDescription, 'Hook line.\nSecond line.');
+});
+
+test('current program headings populate program-safe fields while admin fields retain full submission data', () => {
+  const ev = buildEvent({
+    Name: 'Event organiser',
+    'Entry ID': 'event-123',
+    Organisation: 'Example Org',
+    'Tell us about your event': 'Full internal submission detail.',
+    'Marketing Description': 'Short public program copy.',
+    'URL to Hero Thumbnail': 'https://example.com/hero.jpg',
+    'URL to Logo': 'https://example.com/logo.svg',
+    'What medium of games will be part of your event?': 'Digital, Tabletop',
+    'What genres of games  plan to have?': 'Puzzle, Narrative',
+    'Do you understand what is involved with running an event as part of Sydney Games Festival': 'Yes',
+    'Upload your Hero Image': 'https://example.com/uploaded-hero.jpg',
+  });
+
+  assert.equal(ev.organiser, 'Event organiser');
+  assert.equal(ev.entryId, 'event-123');
+  assert.equal(ev.description, 'Full internal submission detail.');
+  assert.equal(ev.programDescription, 'Short public program copy.');
+  assert.equal(ev.heroThumbnail, 'https://example.com/hero.jpg');
+  assert.equal(ev.logoUrl, 'https://example.com/logo.svg');
+  assert.deepEqual(ev.gameMediums, ['Digital', 'Tabletop']);
+  assert.deepEqual(ev.gameGenres, ['Puzzle', 'Narrative']);
+  assert.equal(ev.deliveryAcknowledgement, 'Yes');
+  assert.equal(ev.uploadedHeroImage, 'https://example.com/uploaded-hero.jpg');
+});
+
+test('Name and Event Name remain distinct and independent of column order', () => {
+  const row = {
+    'Organisation URL': 'https://wrong.example.com',
+    'Event Name': 'Correct event title',
+    Organisation: 'Correct organisation',
+    Name: 'Correct organiser',
+  };
+  const hdrs = Domain.headerIndex(Object.keys(row));
+  const ev = Domain.buildEvent(row, hdrs, CFG, { links: Links, validation: Validation });
+  const reversedRow = Object.fromEntries(Object.entries(row).reverse());
+  const reversed = buildEvent(reversedRow);
+
+  assert.equal(ev.title, 'Correct event title');
+  assert.equal(ev.organisation, 'Correct organisation');
+  assert.equal(ev.organiser, 'Correct organiser');
+  assert.equal(reversed.title, ev.title);
+  assert.equal(reversed.organisation, ev.organisation);
+  assert.equal(reversed.organiser, ev.organiser);
+});
+
+test('renamed headings fail closed until the exact current heading contract is updated', () => {
+  const ev = buildEvent({
+    Name: 'Correct organiser',
+    'Event title': 'Not the current Event Name heading',
+    'Marketing Blurb (30 words)': 'Not the current Marketing Description heading',
+    'URL to Thumbnail': 'https://example.com/old-heading.jpg',
+  });
+
+  assert.equal(ev.organiser, 'Correct organiser');
+  assert.equal(ev.hasRealName, false);
+  assert.equal(ev.programDescription, '');
+  assert.equal(ev.heroThumbnail, '');
+});
+
+test('public event projection includes program fields and excludes full/admin fields', () => {
+  const ev = buildEvent({
+    Name: 'Private organiser context',
+    Organisation: 'Example Org',
+    'Tell us about your event': 'Full submission detail.',
+    'Marketing Description': 'Public copy.',
+    'URL to Hero Thumbnail': 'https://example.com/hero.jpg',
+    'Upload your Hero Image': 'https://example.com/raw-upload.jpg',
+    Published: 'Y',
+  });
+  const publicEvent = Domain.toPublicEvent(ev);
+
+  assert.equal(publicEvent.programDescription, 'Public copy.');
+  assert.equal(publicEvent.heroThumbnail, 'https://example.com/hero.jpg');
+  assert.equal(publicEvent.organiser, undefined);
+  assert.equal(publicEvent.description, undefined);
+  assert.equal(publicEvent.uploadedHeroImage, undefined);
 });
 
 test('parseTimeToMin extracts the actual time from spreadsheet-exported date-time values', () => {
@@ -115,7 +195,7 @@ test('buildEvent uses parsed sheet-exported times for confirmed same-day events'
     'Stage of Planning': 'Confirmed Planning',
     'What is the specific date being planned?': 'Sat, Oct 17',
     'What is the start time being planned?': '12/30/1899 9:00:00 AM',
-    'WIf known, what is the end time being planned?': '12/30/1899 10:00:00 PM',
+    'What is the end time being planned?': '12/30/1899 10:00:00 PM',
   });
 
   assert.equal(ev.startMin, 540);
@@ -128,7 +208,7 @@ test('grid-scheduled events with explicit times are treated as timed day schedul
     'Stage of Planning': 'Early/Unconfirmed Planning',
     'If still planning, what day/time are you planning for? [Sat, Oct 17]': 'Morning, Afternoon, Evening',
     'What is the start time being planned?': '12/30/1899 9:00:00 AM',
-    'WIf known, what is the end time being planned?': '12/30/1899 10:00:00 PM',
+    'What is the end time being planned?': '12/30/1899 10:00:00 PM',
   });
 
   assert.equal(Domain.hasTimedSchedule(ev), true);
@@ -225,7 +305,7 @@ test('shared presentation helpers return consistent labels', () => {
     Published: 'Y',
     'What is the specific date being planned?': 'Mon, Oct 12',
     'What is the start time being planned?': '7:00 PM',
-    'WIf known, what is the end time being planned?': '11:00 PM',
+    'What is the end time being planned?': '11:00 PM',
     'What type of audience are you targeting?': 'General Public, Experienced Makers',
   });
 
@@ -347,10 +427,10 @@ test('buildEvent drops unsafe URLs before any page renders them', () => {
     'Stage of Planning': 'Announced / Live',
     'Organisation URL': 'javascript:alert(1)',
     'What URL should we direct people to? (more info, tickets)': 'data:text/html,hello',
-    'URL to Thumbnail': ' ftp://example.com/poster.png ',
+    'URL to Hero Thumbnail': ' ftp://example.com/poster.png ',
   });
 
   assert.equal(ev.orgUrl, '');
   assert.equal(ev.ticketUrl, '');
-  assert.equal(ev.thumbnail, '');
+  assert.equal(ev.heroThumbnail, '');
 });

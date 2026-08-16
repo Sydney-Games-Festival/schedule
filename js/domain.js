@@ -27,10 +27,67 @@
     return fields.map((h) => ({ raw: h, n: norm(h) }));
   }
 
-  function pick(row, hdrs) {
-    const tokens = Array.prototype.slice.call(arguments, 2).map(norm);
-    const hit = hdrs.find((h) => tokens.every((t) => h.n.includes(t)));
+  // Canonical event fields mapped to the one current table heading for each.
+  // Matching is literal after trimming outer whitespace. A heading rename must
+  // be reflected here deliberately; there are no fuzzy or legacy aliases.
+  const FIELD_HEADINGS = {
+    timestamp: 'Timestamp',
+    entryId: 'Entry ID',
+    published: 'Published',
+    stageOfPlanning: 'Stage of Planning',
+    organiserName: 'Name',
+    organisation: 'Organisation',
+    role: 'Role',
+    organisationUrl: 'Organisation URL',
+    reach: 'Estimate of people your organisation reaches?',
+    email: 'Email Address',
+    mobile: 'Mobile number',
+    discord: 'Discord handle',
+    alternateContact: 'Alternate Contact Method',
+    coOrganisers: 'Who else is part of organising this event?',
+    description: 'Tell us about your event',
+    duration: 'How long will your event last? (duration)',
+    location: 'Where do you plan to host the event?',
+    venueLatLng: 'Venue Lat/Lng',
+    attendance: 'Estimated attendance size?',
+    capacity: 'What is your max capacity?',
+    gameTypes: 'What type of games will be part of your event?',
+    gameMediums: 'What medium of games will be part of your event?',
+    gameGenres: 'What genres of games  plan to have?',
+    audiences: 'What type of audience are you targeting?',
+    programDescription: 'Marketing Description',
+    specificDate: 'What is the specific date being planned?',
+    startTime: 'What is the start time being planned?',
+    endTime: 'What is the end time being planned?',
+    ticketUrl: 'What URL should we direct people to? (more info, tickets)',
+    eventName: 'Event Name',
+    heroThumbnail: 'URL to Hero Thumbnail',
+    logoUrl: 'URL to Logo',
+    deliveryAcknowledgement:
+      'Do you understand what is involved with running an event as part of Sydney Games Festival',
+    uploadedHeroImage: 'Upload your Hero Image',
+  };
+
+  const PLANNING_HEADINGS = {
+    '2026-10-12': 'If still planning, what day/time are you planning for? [Mon, Oct 12]',
+    '2026-10-13': 'If still planning, what day/time are you planning for? [Tues, Oct 13]',
+    '2026-10-14': 'If still planning, what day/time are you planning for? [Wed, Oct 14]',
+    '2026-10-15': 'If still planning, what day/time are you planning for? [Thurs, Oct 15]',
+    '2026-10-16': 'If still planning, what day/time are you planning for? [Fri, Oct 16]',
+    '2026-10-17': 'If still planning, what day/time are you planning for? [Sat, Oct 17]',
+    '2026-10-18': 'If still planning, what day/time are you planning for? [Sun, Oct 18]',
+    other: 'If still planning, what day/time are you planning for? [Other date]',
+  };
+
+  function pickHeading(row, hdrs, heading) {
+    const expected = String(heading).trim();
+    const hit = hdrs.find((header) => String(header.raw).trim() === expected);
     return hit ? String(row[hit.raw] ?? '').trim() : '';
+  }
+
+  function pickField(row, hdrs, field) {
+    const heading = FIELD_HEADINGS[field];
+    return heading ? pickHeading(row, hdrs, heading) : '';
   }
 
   function splitList(v) {
@@ -170,10 +227,10 @@
     const cleanText = validation && typeof validation.cleanText === 'function'
       ? validation.cleanText
       : function (value) { return String(value == null ? '' : value).trim(); };
-    const specific = cleanText(pick(row, hdrs, 'specific date'));
-    const startTime = cleanText(pick(row, hdrs, 'start time'));
-    const endTime = cleanText(pick(row, hdrs, 'end time'));
-    const otherDate = cleanText(pick(row, hdrs, 'still planning', 'other'));
+    const specific = cleanText(pickField(row, hdrs, 'specificDate'));
+    const startTime = cleanText(pickField(row, hdrs, 'startTime'));
+    const endTime = cleanText(pickField(row, hdrs, 'endTime'));
+    const otherDate = cleanText(pickHeading(row, hdrs, PLANNING_HEADINGS.other));
     const base = {
       entries: [],
       specificRaw: specific,
@@ -190,8 +247,7 @@
     }
 
     for (const d of cfg.FESTIVAL_DAYS) {
-      const dayNum = d.iso.slice(-2).replace(/^0/, '');
-      const val = cleanText(pick(row, hdrs, 'still planning', 'oct ' + dayNum));
+      const val = cleanText(pickHeading(row, hdrs, PLANNING_HEADINGS[d.iso] || ''));
       if (val) base.entries.push({ iso: d.iso, tentative: true, slot: val, startTime, endTime });
     }
     if (base.entries.length) return base;
@@ -245,13 +301,13 @@
     const cleanUrl = links && typeof links.cleanUrl === 'function'
       ? links.cleanUrl
       : function () { return ''; };
-    const organisation = cleanText(pick(row, hdrs, 'organisation'));
-    const eventName = cleanText(pick(row, hdrs, 'event name'));
+    const organisation = cleanText(pickField(row, hdrs, 'organisation'));
+    const eventName = cleanText(pickField(row, hdrs, 'eventName'));
     const sched = buildSchedule(row, hdrs, cfg, validation);
-    const publishedRaw = cleanText(pick(row, hdrs, 'published'));
-    const startTime = cleanText(pick(row, hdrs, 'start time'));
-    const endTime = cleanText(pick(row, hdrs, 'end time'));
-    const duration = cleanText(pick(row, hdrs, 'how long', 'duration') || pick(row, hdrs, 'duration'));
+    const publishedRaw = cleanText(pickField(row, hdrs, 'published'));
+    const startTime = cleanText(pickField(row, hdrs, 'startTime'));
+    const endTime = cleanText(pickField(row, hdrs, 'endTime'));
+    const duration = cleanText(pickField(row, hdrs, 'duration'));
     const startMin = parseTimeToMin(startTime);
     let endMin = parseTimeToMin(endTime);
 
@@ -261,40 +317,53 @@
     }
     if (startMin != null && endMin != null && endMin <= startMin) endMin = startMin + 60;
 
+    // These are deliberately separate from the full/internal description and
+    // upload fields. Public pages must use the program-ready values only;
+    // admin pages can show both the program copy and the full submission.
+    const programDescription = cleanMultiline(pickField(row, hdrs, 'programDescription'));
+    const heroThumbnail = cleanUrl(pickField(row, hdrs, 'heroThumbnail'));
+    const statusRaw = pickField(row, hdrs, 'stageOfPlanning');
+
     return {
+      entryId: cleanText(pickField(row, hdrs, 'entryId')),
       title: eventName || organisation || 'Untitled event',
       hasRealName: !!eventName,
       organisation,
-      organiser: cleanText(pick(row, hdrs, 'name')),
-      role: cleanText(pick(row, hdrs, 'role')),
-      orgUrl: cleanUrl(pick(row, hdrs, 'organisation url')),
-      reach: cleanText(pick(row, hdrs, 'reaches')),
-      coOrganisers: cleanText(pick(row, hdrs, 'who else')),
+      organiser: cleanText(pickField(row, hdrs, 'organiserName')),
+      role: cleanText(pickField(row, hdrs, 'role')),
+      orgUrl: cleanUrl(pickField(row, hdrs, 'organisationUrl')),
+      reach: cleanText(pickField(row, hdrs, 'reach')),
+      coOrganisers: cleanText(pickField(row, hdrs, 'coOrganisers')),
 
-      status: statusInfo(pick(row, hdrs, 'stage of planning'), cfg),
-      statusRaw: pick(row, hdrs, 'stage of planning'),
+      status: statusInfo(statusRaw, cfg),
+      statusRaw,
       published: cleanPublished(publishedRaw),
       publishedRaw,
 
-      email: cleanText(pick(row, hdrs, 'email')),
-      mobile: cleanText(pick(row, hdrs, 'mobile')),
-      discord: cleanText(pick(row, hdrs, 'discord')),
-      altContact: cleanText(pick(row, hdrs, 'alternate contact')),
+      email: cleanText(pickField(row, hdrs, 'email')),
+      mobile: cleanText(pickField(row, hdrs, 'mobile')),
+      discord: cleanText(pickField(row, hdrs, 'discord')),
+      altContact: cleanText(pickField(row, hdrs, 'alternateContact')),
 
-      description: cleanMultiline(pick(row, hdrs, 'tell us about')),
-      blurb: cleanMultiline(pick(row, hdrs, 'marketing blurb')),
-      gameTypes: cleanList(pick(row, hdrs, 'type of games')),
-      audiences: cleanList(pick(row, hdrs, 'type of audience')),
+      description: cleanMultiline(pickField(row, hdrs, 'description')),
+      programDescription,
+      gameTypes: cleanList(pickField(row, hdrs, 'gameTypes')),
+      gameMediums: cleanList(pickField(row, hdrs, 'gameMediums')),
+      gameGenres: cleanList(pickField(row, hdrs, 'gameGenres')),
+      audiences: cleanList(pickField(row, hdrs, 'audiences')),
+      deliveryAcknowledgement: cleanText(pickField(row, hdrs, 'deliveryAcknowledgement')),
 
       duration,
-      location: cleanLocation(pick(row, hdrs, 'where do you plan')),
-      venueLatLng: parseLatLng(pick(row, hdrs, 'venue', 'lat')),
-      attendance: cleanText(pick(row, hdrs, 'estimated attendance')),
-      capacity: cleanText(pick(row, hdrs, 'max capacity')),
-      ticketUrl: cleanUrl(pick(row, hdrs, 'what url should we direct')),
-      thumbnail: cleanUrl(pick(row, hdrs, 'url to thumbnail')),
+      location: cleanLocation(pickField(row, hdrs, 'location')),
+      venueLatLng: parseLatLng(pickField(row, hdrs, 'venueLatLng')),
+      attendance: cleanText(pickField(row, hdrs, 'attendance')),
+      capacity: cleanText(pickField(row, hdrs, 'capacity')),
+      ticketUrl: cleanUrl(pickField(row, hdrs, 'ticketUrl')),
+      heroThumbnail,
+      logoUrl: cleanUrl(pickField(row, hdrs, 'logoUrl')),
+      uploadedHeroImage: cleanUrl(pickField(row, hdrs, 'uploadedHeroImage')),
 
-      timestamp: cleanText(pick(row, hdrs, 'timestamp')),
+      timestamp: cleanText(pickField(row, hdrs, 'timestamp')),
       startTime,
       endTime,
       startMin,
@@ -312,6 +381,24 @@
       scheduled: sched.entries.length > 0,
       confirmedTiming: sched.entries.some((e) => !e.tentative),
     };
+  }
+
+  // Public pages receive an explicit projection instead of the full parsed
+  // submission object. This keeps internal/admin fields from becoming usable
+  // by the program page just because buildEvent learns about a new column.
+  // The published CSV must still exclude genuinely private source columns:
+  // client-side projection is a rendering boundary, not access control.
+  function toPublicEvent(ev) {
+    const fields = [
+      'title', 'hasRealName', 'organisation',
+      'published', 'publishedRaw',
+      'programDescription', 'gameTypes', 'audiences',
+      'duration', 'location', 'venueLatLng', 'ticketUrl', 'heroThumbnail',
+      'startTime', 'endTime', 'startMin', 'endMin', 'timeText',
+      'region', 'outsideIso', 'outsideLabel', 'specificDateRaw', 'otherDate',
+      'schedule', 'dayIsos', 'scheduled', 'confirmedTiming',
+    ];
+    return Object.fromEntries(fields.map((field) => [field, ev[field]]));
   }
 
   function parts(m) {
@@ -476,10 +563,10 @@
     parseDurationToMin,
     parseLatLng,
     parseTimeToMin,
-    pick,
     scheduleSummary,
     splitList,
     statusInfo,
     tentativeSlots,
+    toPublicEvent,
   };
 });

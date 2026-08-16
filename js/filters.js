@@ -40,9 +40,11 @@
         ev.title,
         ev.organisation,
         ev.organiser,
-        ev.blurb,
+        ev.programDescription,
         ev.description,
         ev.gameTypes.join(' '),
+        ev.gameMediums.join(' '),
+        ev.gameGenres.join(' '),
         ev.audiences.join(' '),
         ev.location,
       ], filters.search);

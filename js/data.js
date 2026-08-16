@@ -45,9 +45,9 @@
     });
   }
 
-  // `source` is accepted for readability at call sites (loadEvents('admin') /
-  // loadEvents('public')) but every page reads the SAME sheet now — there is
-  // no separate contact-containing CSV any more. See CFG.EVENTS_CSV_URL.
+  // Every page reads the same published sheet, but the returned data shape is
+  // source-specific: public callers receive a program-field whitelist while
+  // admin callers receive the complete parsed event object.
   async function loadEvents(source, options) {
     const liveUrl = CFG.EVENTS_CSV_URL;
     const sampleUrl = new URL(CFG.SAMPLE_CSV_URL, SITE_ROOT).href;
@@ -99,7 +99,10 @@
         result = await parseUrl(sampleUrl);
       }
     }
-    return { events: result.events, fields: result.fields, usedSample, effectiveSource, requestedSource: mode };
+    const selectedEvents = source === 'public'
+      ? result.events.map((event) => Domain.toPublicEvent(event))
+      : result.events;
+    return { events: selectedEvents, fields: result.fields, usedSample, effectiveSource, requestedSource: mode };
   }
 
   window.SGF = Object.assign(window.SGF || {}, {

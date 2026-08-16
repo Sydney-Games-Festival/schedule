@@ -8,7 +8,7 @@
   }
 
   // Like cleanText, but keeps line breaks — for long-text fields (description,
-  // marketing blurb) that render in white-space: pre-wrap containers, where
+  // program description) that render in white-space: pre-wrap containers, where
   // collapsing newlines would flatten paragraphs into one block.
   function cleanMultiline(value) {
     return String(value == null ? '' : value)

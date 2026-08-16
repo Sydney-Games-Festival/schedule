@@ -25,11 +25,8 @@ and auto-falls-back to sample when the live tab is empty.
 - **Sheet:** https://docs.google.com/spreadsheets/d/1U8jFpmMSGMHrqNflQdCX3hxUbj0xtO4u9xYxRE7H8Pw/edit
 - **The one and only CSV every page reads — `EVENTS_CSV_URL` in `js/config.js`:**
   the **"Sanitised Results" tab** (gid `171864363`),
-  `…/pub?gid=171864363&single=true&output=csv`. It already excludes the five
-  contact columns (Name, Email Address, Mobile number, Discord handle,
-  Alternate Contact Method) via a `QUERY` formula in its A1 — see §9 item 2 —
-  but includes every other field (status, published, schedule, venue, game
-  types, audience, blurb, ticket URL, event name, thumbnail). **There is no
+  `…/pub?gid=171864363&single=true&output=csv`. It excludes private contact details at the sheet level.
+  It includes the remaining program and planning fields. **There is no
   separate "admin" CSV any more** — see §8 for why.
 - Admin's "Form Responses 1" tab (gid `1037089166`) is the raw form output with
   contacts. The app never fetches it. Admins who need an organiser's contact
@@ -43,35 +40,36 @@ code change.
 ### Publish gate (`Published` column)
 - A **`Published`** column (Y/N) controls the public page: an event renders on
   `index.html` **only if `Published` = Y**. This is the single public gate
-  (independent of Stage of Planning). In the live full tab this is the currently
-  unnamed trailing column ("Column 33") — **rename it to `Published`**.
+  (independent of Stage of Planning).
 - The admin page ignores this gate and shows everything.
 
 ### Column matching is by header **name**, not position
-The form will gain new fields (Event Name, Image). Code normalises header text
-(lowercase, strip punctuation) and matches on keywords so added/reordered columns
-don't break rendering.
+Code matches each field to one literal current heading (ignoring only outer
+whitespace). Reordering columns does not change which values are selected; a
+heading rename requires an intentional update to the heading contract.
 
 ### Current CSV columns (form order)
-`Timestamp`, `Stage of Planning`, `Name`, `Organisation`, `Role`,
+`Timestamp`, `Published`, `Stage of Planning`, `Name`, `Organisation`, `Role`,
 `Organisation URL`, `Estimate of people your organisation reaches?`,
-`Email Address`, `Mobile number`, `Discord handle`, `Alternate Contact Method`,
 `Who else is part of organising this event?`, `Tell us about your event`,
 day/time grid ×8 (`… [Mon, Oct 12]` … `[Sun, Oct 18]`, `[Other date]`),
 `How long will your event last? (duration)`, `Where do you plan to host the event?`,
 `Estimated attendance size?`, `What is your max capacity?`,
 `What type of games will be part of your event?`,
-`What type of audience are you targeting?`, `Marketing Blurb (30 words)`,
+`What type of audience are you targeting?`, `Marketing Description`,
 `What is the specific date being planned?`, `What is the start time being planned?`,
-`WIf known, what is the end time being planned?`,
-`What URL should we direct people to? (more info, tickets)`.
+`What is the end time being planned?`,
+`What URL should we direct people to? (more info, tickets)`, `Event Name`,
+`URL to Hero Thumbnail`, `URL to Logo`, game medium, game genres, delivery
+acknowledgement, `Upload your Hero Image`, and `Entry ID`.
 
 ### Form additions (done)
 1. **Event Name** — form question added. Becomes the card title; falls back to
    Organisation if blank. (CSV column `Event Name`.)
-2. **URL to Thumbnail** — form question added (a URL text field, not a file
+2. **URL to Hero Thumbnail** — form question added (a URL text field, not a file
    upload). The public page uses this URL directly as the card image; events with
-   no thumbnail get a styled placeholder. (CSV column `URL to Thumbnail`.)
+   no thumbnail get a styled placeholder. The raw upload field remains
+   admin-only in the app model.
 
 ### Controlled vocabularies (from the form)
 - **Stage of Planning:** Ideation · Early/Unconfirmed Planning · Confirmed
@@ -108,9 +106,10 @@ Functional, information-dense. Audience: organisers.
 **Look:** clean white + blue, using the Google Form's fonts — **Space Grotesk**
 (body) and **Special Gothic Expanded One** (headings), both from Google Fonts.
 
-**Shows:** all events, every status and audience type. **No contact details**
-(Name/Email/Mobile/Discord/Alt Contact) are fetched or displayed anywhere in
-the app — the event detail drawer's "Contact details" section instead links
+**Shows:** all events, every status and audience type, organiser name, full
+submission description, program description, and the additional media/game
+fields. **Private contact details** (Email/Mobile/Discord/Alt Contact) are not
+fetched or displayed — the event detail drawer's "Contact details" section links
 directly to the source Google Sheet (`SHEET_EDIT_URL` in `js/admin.js`), where
 an admin with their own sheet access can look up the organiser using the
 Organisation name and submitted-timestamp shown in the drawer.
@@ -153,7 +152,7 @@ flush under the top bar, drives the single-day views):
 (colour-coded status toggles), audience type, game type, day, and Published Y/N.
 
 **Per-event detail drawer:** title, organisation + role, org URL, reach,
-co-organisers, description, blurb, game types, audience, duration, location,
+co-organisers, full description, program description, game types, audience, duration, location,
 attendance, max capacity, ticket URL, thumbnail, submitted timestamp, a
 plain-language schedule summary (confirmed vs tentative), and the "open in
 Google Sheet" contact link described above.
@@ -206,8 +205,9 @@ Grotesk** (body).
     most specific audience · **GET TICKETS** button → ticket URL (disabled style
     when no URL).
   - Uppercase orange title + organisation as subtitle.
-  - Left: thumbnail (from `URL to Thumbnail`, falling back to a styled
-    placeholder on missing/broken). Right: **About** = marketing blurb.
+  - Left: thumbnail (from `URL to Hero Thumbnail`, falling back to a styled
+    placeholder on missing/broken). Right: **About** = `Marketing Description`.
+    The program page does not fall back to the full submission description.
   - Footer chips: primary game type · location · duration.
   - Missing display fields render as "???", matching the screenshot.
 - **Publish gate:** only events with `Published` = Y appear (§1).
@@ -279,7 +279,7 @@ back to it.
 
 - `js/data.js` — fetch + PapaParse + column mapping + normalise each row into a
   clean `Event` object (status, title, org, gameTypes[], audiences[],
-  schedule[], blurb, description, ticketUrl, image, etc.). Shared by every page.
+  schedule[], programDescription, description, ticketUrl, image, etc.). Shared by every page.
   Resolves `SAMPLE_CSV_URL` against the location of `data.js` itself (not the
   page), so it works correctly whether loaded from the root or from `private/`.
 - `js/admin.js`, `js/public.js`, `js/map.js` (admin map), `js/map-public.js`
@@ -299,7 +299,7 @@ back to it.
   schedule at `/private/admin.html`, admin map at `/private/map.html`.
   **"private/" is a folder name, not access control** — same as before, these
   URLs are unlisted/obscure, not secret or authenticated. The actual privacy
-  boundary is that **no contact data exists in anything the app fetches** (see
+  boundary is that **no private contact data exists in anything the app fetches** (see
   below), not the URL's obscurity.
 - Optional `CNAME` for a custom domain later.
 
@@ -321,8 +321,8 @@ Sheet's UI:
   admin-only config file wasn't a complete fix on its own, just a smaller target.
 
 **Resolution:** every page — public and admin alike — now reads the **same**
-single CSV, the "Sanitised Results" tab, which already excludes the five
-contact columns *at the spreadsheet level* (via its `QUERY` formula, §9 item 2).
+single CSV, the "Sanitised Results" tab, which excludes the four private
+contact columns *at the spreadsheet level* (§9 item 2).
 There is nothing contact-containing for the app to ever fetch, so there is
 nothing to leak regardless of how the sheet's publish scope is configured.
 Admin's event drawer links directly to the source Sheet (`private/js/admin.js`
@@ -345,12 +345,12 @@ exclusively (§1, §8 above).
 ## 9. Open items owned by you
 1. ~~Rename "Column 33" → `Published`~~ — **done**, moved to column B. Set Y/N
    per event as submissions come in.
-2. ~~Populate the "Sanitised Results" tab~~ — **done**. A1 holds:
-   `=QUERY('Form Responses 1'!A:AI, "select A,B,C,E,F,G,H,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,AA,AB,AC,AD,AE,AF,AG,AH,AI", 1)`
-   — every column except Name/Email Address/Mobile number/Discord handle/
-   Alternate Contact Method (verified live via the published CSV: 30 columns,
-   zero contact fields). If the form's columns are ever reordered or renamed,
-   this formula's column letters need updating to match.
+2. ~~Populate the "Sanitised Results" tab~~ — **done**. After the August 2026
+   heading/order update and Entry ID addition, the live published CSV has 37 columns. It includes
+   organiser `Name` for the admin view and excludes Email Address, Mobile
+   number, Discord handle, and Alternate Contact Method. If the raw form columns
+   move again, update the sanitised-tab formula/selection and recheck its live
+   header row before publishing.
 3. **Map pages:** optionally add a `Venue Lat/Lng` column to override geocoding
    for any venues Nominatim gets wrong (hybrid approach — see §5). Not required
    to start; geocoding runs without it.

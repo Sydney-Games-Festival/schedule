@@ -7,9 +7,9 @@
   const Domain = window.SGF_DOMAIN;
   const Filters = window.SGF_FILTERS;
   const Links = window.SGF_LINKS;
-  // Organiser contact details (Name/Email/Mobile/Discord/Alt Contact) are
-  // excluded from every published CSV for privacy — look them up directly in
-  // the source sheet instead of the app ever fetching/displaying them.
+  // Private contact details (email/mobile/Discord/alternate contact) are
+  // excluded from the published CSV — look them up directly in the source
+  // sheet instead of the app ever fetching/displaying them.
   const SHEET_EDIT_URL = 'https://docs.google.com/spreadsheets/d/1U8jFpmMSGMHrqNflQdCX3hxUbj0xtO4u9xYxRE7H8Pw/edit';
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -448,22 +448,26 @@
       <div class="body">
         <div class="meta-row">${statusBadge(ev)}
           <span class="pub-dot ${ev.published ? 'y' : 'n'}">${ev.published ? 'Published' : 'Not published'}</span></div>
-        ${ev.thumbnail ? `<img class="thumb-prev" src="${esc(ev.thumbnail)}" alt="" onerror="this.remove()">` : ''}
+        ${ev.heroThumbnail ? `<img class="thumb-prev" src="${esc(ev.heroThumbnail)}" alt="" onerror="this.remove()">` : ''}
         <section><h3>Schedule</h3><p class="desc">${esc(Domain.scheduleSummary(ev, dayByIso))}</p></section>
-        ${ev.description ? `<section><h3>About</h3><p class="desc">${esc(ev.description)}</p></section>` : ''}
-        ${ev.blurb ? `<section><h3>Marketing blurb</h3><p class="desc">${esc(ev.blurb)}</p></section>` : ''}
+        ${ev.description ? `<section><h3>Full event description</h3><p class="desc">${esc(ev.description)}</p></section>` : ''}
+        ${ev.programDescription ? `<section><h3>Program description</h3><p class="desc">${esc(ev.programDescription)}</p></section>` : ''}
         <section><h3>Details</h3><dl>
-          ${drow('Organisation', esc(ev.organisation))}
+          ${drow('Entry ID', esc(ev.entryId))}
+          ${drow('Organiser name', esc(ev.organiser))}${drow('Organisation', esc(ev.organisation))}
           ${drow('Role', esc(ev.role))}${drow('Org URL', dlink(ev.orgUrl))}${drow('Reach', esc(ev.reach))}
           ${drow('Co-organisers', esc(ev.coOrganisers))}${drow('Game types', esc(ev.gameTypes.join(', ')))}
+          ${drow('Game mediums', esc(ev.gameMediums.join(', ')))}${drow('Game genres', esc(ev.gameGenres.join(', ')))}
           ${drow('Audience', esc(ev.audiences.join(', ')))}${drow('Duration', esc(ev.duration))}
           ${drow('Location', esc(ev.location))}${drow('Est. attendance', esc(ev.attendance))}
           ${drow('Max capacity', esc(ev.capacity))}${drow('Tickets / info', dlink(ev.ticketUrl))}
-          ${drow('Thumbnail URL', dlink(ev.thumbnail))}
+          ${drow('Hero thumbnail URL', dlink(ev.heroThumbnail))}${drow('Logo URL', dlink(ev.logoUrl))}
+          ${drow('Uploaded hero image', dlink(ev.uploadedHeroImage))}
+          ${drow('Delivery acknowledgement', esc(ev.deliveryAcknowledgement))}
           ${drow('Submitted', esc(ev.timestamp))}
         </dl></section>
         <section><h3>Contact details</h3>
-          <p class="desc">${esc("Organiser name, email, phone, and Discord aren't published to this app for privacy. Look them up in the source sheet — use the organisation and submitted-time above to find the right row.")}</p>
+          <p class="desc">${esc("Email, phone, Discord, and alternate contact details aren't published to this app for privacy. Look them up in the source sheet — use the organiser, organisation, and submitted-time above to find the right row.")}</p>
           <a class="chip-btn" href="${esc(SHEET_EDIT_URL)}" target="_blank" rel="noopener">Open in Google Sheet ↗</a>
         </section>
       </div>`;

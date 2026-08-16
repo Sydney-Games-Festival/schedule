@@ -76,8 +76,8 @@
   function cardHtml(ev, scopeKey) {
     const scopeIso = dayByIso[scopeKey] ? scopeKey : '';
     const badge = Domain.audienceBadge(ev);
-    const img = ev.thumbnail
-      ? `<img src="${esc(ev.thumbnail)}" alt="${esc(ev.title)}" onerror="this.onerror=null;this.src='images/placeholder.svg'">`
+    const img = ev.heroThumbnail
+      ? `<img src="${esc(ev.heroThumbnail)}" alt="${esc(ev.title)}" onerror="this.onerror=null;this.src='images/placeholder.svg'">`
       : `<img src="images/placeholder.svg" alt="">`;
     const tickets = Links.hasUrl(ev.ticketUrl)
       ? `<a class="btn-tickets" href="${esc(ev.ticketUrl)}" target="_blank" rel="noopener">GET TICKETS</a>`
@@ -96,7 +96,7 @@
         <div class="pcard-img">${img}</div>
         <div class="pcard-about">
           <h3>About</h3>
-          <p>${esc(ev.blurb || ev.description || PLACEHOLDER)}</p>
+          <p>${esc(ev.programDescription || PLACEHOLDER)}</p>
         </div>
       </div>
       <div class="pcard-foot">
